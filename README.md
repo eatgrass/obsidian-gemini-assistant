@@ -10,8 +10,14 @@ Your Gemini AI Powered Assistant
 
 ### **Generate with selection**
 
+![1](https://github.com/eatgrass/obsidian-gemini-assistant/assets/2351076/880ac866-f4fd-4c65-b15d-b0a37d967351)
 
-### **Chat**
+
+### **Chat Command**
+
+Select `Gemini Assitant: Chat` to start
+
+![2](https://github.com/eatgrass/obsidian-gemini-assistant/assets/2351076/ec913fba-a761-4233-8260-ec112115bee0)
 
 ---
 
