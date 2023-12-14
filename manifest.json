@@ -1,0 +1,11 @@
+{
+	"id": "gemini-assistant",
+	"name": "Gemini Assistant",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Your Gemini AI assistant",
+	"author": "eatgrass",
+	"authorUrl": "https://github.com/eatgrass",
+	"fundingUrl": "https://www.buymeacoffee.com/eatgrass",
+	"isDesktopOnly": false
+}
