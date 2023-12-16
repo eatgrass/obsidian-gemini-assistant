@@ -6,7 +6,13 @@ Your Gemini AI Powered Assistant
 
 - Content Generation
 
+🚧 Important Update: Ongoing Development 
+
 ## Usage
+
+### API Key
+
+you can get your Gemini API key at here [https://ai.google.dev/](https://ai.google.dev/)
 
 ### **Generate with selection**
 
