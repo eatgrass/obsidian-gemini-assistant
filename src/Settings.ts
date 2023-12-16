@@ -1,11 +1,23 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 import GeminiAssistantPlugin from 'main'
+import { type Model } from 'GeminiService'
 
 export interface Settings {
     apiKey: string
+    model: Model
 }
 export const DEFAULT_SETTINGS: Settings = {
     apiKey: '',
+    model: 'gemini-pro',
+}
+
+const MODELS: Record<Model, { description: string }> = {
+    'gemini-pro': {
+        description: 'text generate',
+    },
+    'gemini-pro-vision': {
+        description: 'multi modal',
+    },
 }
 
 export default class GeminiSettings extends PluginSettingTab {
@@ -31,6 +43,18 @@ export default class GeminiSettings extends PluginSettingTab {
             text.setValue(this.settings.apiKey)
             text.onChange((apiKey) => {
                 this.updateSettings({ apiKey })
+            })
+        })
+
+        new Setting(containerEl).setName('Model').addDropdown((select) => {
+            Object.entries(MODELS).forEach(([key, _]) => {
+                select.addOptions({
+                    [key]: key,
+                })
+            })
+            select.setValue(this.settings.model)
+            select.onChange((value) => {
+                this.updateSettings({ model: value as Model })
             })
         })
     }

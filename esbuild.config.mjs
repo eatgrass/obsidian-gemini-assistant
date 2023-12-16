@@ -35,6 +35,7 @@ const context = await esbuild.context({
         '@codemirror/search',
         '@codemirror/state',
         '@codemirror/view',
+		'@codemirror/autocomplete',
         '@lezer/common',
         '@lezer/highlight',
         '@lezer/lr',

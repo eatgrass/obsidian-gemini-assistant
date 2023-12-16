@@ -1,7 +1,7 @@
 import GeminiChatSettings, { DEFAULT_SETTINGS, type Settings } from 'Settings'
-import { Plugin, Editor } from 'obsidian'
-import PromptModal from 'PromptModal'
-import { ChatSession } from 'GeminiChat'
+import { Plugin, Editor, MarkdownView, type MarkdownFileInfo } from 'obsidian'
+import Gemini from 'GeminiService'
+import AssistantSuggestor from 'AssistantSuggestor'
 
 export default class GeminiAssistantPlugin extends Plugin {
     private settings?: GeminiChatSettings
@@ -18,54 +18,22 @@ export default class GeminiAssistantPlugin extends Plugin {
         this.addCommand({
             id: 'gemini-chat',
             name: 'Chat',
-            editorCallback: (editor: Editor) => {
-                new PromptModal(this, editor)
+            editorCallback: (
+                editor: Editor,
+                ctx: MarkdownView | MarkdownFileInfo,
+            ) => {
+                if (ctx instanceof MarkdownView) {
+                    new AssistantSuggestor(this, editor, ctx)
+                }
             },
         })
 
         this.registerEvent(
             this.app.workspace.on('editor-menu', (menu, editor, view) => {
                 menu.addItem((item) => {
-                    item.setTitle('Chat selection')
-                        .setIcon('comment')
-                        .onClick(async () => {
-                            const content = editor.getSelection()
-
-                            if (!content) {
-                                return
-                            }
-
-                            const session = new ChatSession(this)
-                            const line = editor.lastLine()
-
-                            const origin = editor.getLine(line)
-                            editor.setLine(
-                                line,
-                                `${origin}\n\n > Generating...`,
-                            )
-                            session
-                                .chat(content)
-                                .then((response) => response?.json())
-                                .then((data) => {
-                                    let count = line + 2
-                                    editor.setLine(count, `> **Gemini:** \n>\n`)
-                                    data.candidates[0].content.parts[0].text
-                                        .split(/r?\n/)
-                                        .forEach((line: string, i: number) => {
-                                            console.log(line)
-                                            editor.setLine(
-                                                count + i + 2,
-                                                `> ${line}\n`,
-                                            )
-                                        })
-                                })
-                                .catch((error) => {
-                                    editor.setLine(
-                                        line + 2,
-                                        `>[!fail] ${error}`,
-                                    )
-                                })
-                        })
+                    item.setTitle('Test').onClick(async () => {
+                        editor.replaceRange('Hello', editor.getCursor())
+                    })
                 })
             }),
         )
