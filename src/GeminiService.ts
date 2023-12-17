@@ -19,7 +19,7 @@ export default class Gemini {
         )
     }
 
-    public async generate(prompt: string) {
+    public async generate(prompt: any) {
         if (!prompt) {
             return
         }

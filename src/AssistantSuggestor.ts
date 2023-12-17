@@ -16,7 +16,7 @@ type Suggestion = {
 export default class AssistantSuggestor extends SuggestModal<Suggestion> {
     private editor: Editor
 
-    private prompt: string = ''
+    private prompt: any = ''
 
     private view: EditorView
 
@@ -53,6 +53,7 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         const suggestions = [...this.suggestions]
         if (this.editor.somethingSelected()) {
             suggestions[0].display = suggestions[0].display + ' (selection)'
+            this.prompt = [prompt, this.editor.getSelection()]
         }
 
         return suggestions
@@ -72,9 +73,9 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         const result = await this.gemini.generate(this.prompt)
 
         const cursor = this.editor.getCursor()
-        const line = this.view.state.doc.line(cursor.line)
+        const line = this.view.state.doc.line(cursor.line + 1)
 
-		// new line below current cursor position
+        // new line below current cursor position
         this.view.dispatch({
             changes: [
                 {
