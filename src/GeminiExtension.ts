@@ -1,7 +1,4 @@
-import {
-    StateField,
-    StateEffect,
-} from '@codemirror/state'
+import { StateField, StateEffect, Annotation } from '@codemirror/state'
 
 import {
     EditorView,
@@ -13,11 +10,13 @@ import Gemini from 'GeminiService'
 
 import GeminiWidgetComponent from 'components/GeminiWidgetComponent.svelte'
 import type GeminiAssistantPlugin from 'main'
+import { MarkdownRenderChild } from 'obsidian'
+import { MarkdownRenderer } from 'obsidian'
 
-export const addGemini = StateEffect.define<number>({
-    map: (line, change) => {
-        return change.mapPos(line)
-    },
+export const annotation = Annotation.define<string>()
+
+export const addGemini = StateEffect.define<{ pos: number; prompt: any }>({
+    map: (value, change) => ({ pos: change.mapPos(value.pos + 2), prompt }),
 })
 
 export const appendGemini = StateEffect.define<string>({
@@ -33,15 +32,17 @@ export const createState = (plugin: GeminiAssistantPlugin) => {
             widgets = widgets.map(tr.changes)
             for (let e of tr.effects) {
                 if (e.is(addGemini)) {
-                    console.log('dsf')
                     widgets = widgets.update({
                         add: [
                             {
-                                from: 1,
-                                to: 1,
+                                from: e.value.pos,
+                                to: e.value.pos,
                                 value: Decoration.widget({
-                                    widget: new GeminiWidget(plugin, 'Hello'),
-                                    side: -1,
+                                    widget: new GeminiWidget(
+                                        plugin,
+                                        e.value.prompt,
+                                    ),
+                                    side: 1,
                                     block: true,
                                 }),
                             },
@@ -64,31 +65,37 @@ class GeminiWidget extends WidgetType {
 
     private plugin: GeminiAssistantPlugin
 
-    private container = document.createElement('div')
-
     private prompt: string
 
     private gemini: Gemini
+
+    private content = ''
 
     constructor(plugin: GeminiAssistantPlugin, prompt: string) {
         super()
         this.prompt = prompt
         this.plugin = plugin
         this.gemini = new Gemini(plugin)
-		this.generate()
-		console.log("generate")
+        // this.elContainer.addClass('gemini-widget')
+        this.generate()
     }
 
     async generate() {
-		console.log("generate")
         const result = await this.gemini.generate(this.prompt)
-		console.log(result)
         if (result) {
             for await (const chunk of result.stream as any) {
-                let text = chunk.text()
-                let old = this.elContainer.getText()
-                this.elContainer.setText(old + text)
+                this.elContainer.setText((this.content += chunk.text()))
             }
+            const md = this.elContainer.createDiv()
+            await MarkdownRenderer.render(
+                this.plugin.app,
+                this.content,
+                md,
+                '',
+                new MarkdownRenderChild(md),
+            )
+            this.elContainer.setText('')
+            this.elContainer.append(md)
         }
     }
 

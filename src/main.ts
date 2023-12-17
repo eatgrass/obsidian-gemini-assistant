@@ -61,9 +61,6 @@ export default class GeminiAssistantPlugin extends Plugin {
                 if (ctx instanceof MarkdownView) {
                     // @ts-expect-error, not typed
                     let view = ctx.editor.cm as EditorView
-                    view.dispatch({
-                        effects: [addGemini.of(1)],
-                    })
                 }
             },
         })

@@ -2,6 +2,7 @@ import Gemini from 'GeminiService'
 import type GeminiAssistantPlugin from 'main'
 import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
+import { addGemini, annotation } from 'GeminiExtension'
 
 enum Command {
     'ASK_SELECTION',
@@ -70,7 +71,7 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         evt: MouseEvent | KeyboardEvent,
     ) {
         // const stream = await this.session.send(this.prompt)
-        const result = await this.gemini.generate(this.prompt)
+        // const result = await this.gemini.generate(this.prompt)
 
         const cursor = this.editor.getCursor()
         const line = this.view.state.doc.line(cursor.line + 1)
@@ -83,26 +84,10 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
                     insert: '\n\n',
                 },
             ],
-            selection: { anchor: line.to + 2 },
+            // selection: { anchor: line.to + 2 },
+            effects: [addGemini.of({ pos: line.to, prompt: this.prompt })],
+			annotations: annotation.of("gemini")
         })
-
-        let count = 0
-
-        if (result) {
-            for await (const chunk of result.stream as any) {
-                let text = chunk.text()
-                this.view.dispatch({
-                    changes: [
-                        {
-                            from: line.to + 2 + count,
-                            insert: text,
-                        },
-                    ],
-                    selection: { anchor: line.to + 2 + count + text.length },
-                })
-                count += text.length
-            }
-        }
 
         this.prompt = ''
     }
