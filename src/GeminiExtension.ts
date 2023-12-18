@@ -1,30 +1,11 @@
-import { StateField, StateEffect, Annotation } from '@codemirror/state'
-
-import {
-    EditorView,
-    Decoration,
-    type DecorationSet,
-    WidgetType,
-} from '@codemirror/view'
+import { StateField, StateEffect } from '@codemirror/state'
+import { EditorView, Decoration, type DecorationSet } from '@codemirror/view'
 import Gemini from 'GeminiService'
+import { nanoid } from 'nanoid'
+import GeminiAssistantPlugin from 'main'
 
-import GeminiWidgetComponent from 'components/GeminiWidgetComponent.svelte'
-import type GeminiAssistantPlugin from 'main'
-import { MarkdownRenderChild } from 'obsidian'
-import { MarkdownRenderer } from 'obsidian'
-
-export const annotation = Annotation.define<string>()
-
-export const addGemini = StateEffect.define<{ pos: number; prompt: any }>({
-    map: (value, change) => ({ pos: change.mapPos(value.pos + 2), prompt }),
-})
-
-export const appendGemini = StateEffect.define<string>({
-    map: (content) => content,
-})
-
-export const createState = (plugin: GeminiAssistantPlugin) => {
-    return StateField.define<DecorationSet>({
+const createStateFiled = () => {
+    const f: StateField<DecorationSet> = StateField.define<DecorationSet>({
         create() {
             return Decoration.none
         },
@@ -32,82 +13,153 @@ export const createState = (plugin: GeminiAssistantPlugin) => {
             widgets = widgets.map(tr.changes)
             for (let e of tr.effects) {
                 if (e.is(addGemini)) {
+                    const updated = e.map(tr.changes) || e
+                    const geminiMark = Decoration.mark({
+                        class: 'gemini-widget',
+                        id: e.value.id,
+                        tagName: 'span',
+                    })
                     widgets = widgets.update({
                         add: [
-                            {
-                                from: e.value.pos,
-                                to: e.value.pos,
-                                value: Decoration.widget({
-                                    widget: new GeminiWidget(
-                                        plugin,
-                                        e.value.prompt,
-                                    ),
-                                    side: 1,
-                                    block: true,
-                                }),
-                            },
+                            geminiMark.range(
+                                updated.value.from,
+                                updated.value.to,
+                            ),
                         ],
                     })
-                }
-
-                if (e.is(appendGemini)) {
-                    widgets.update({})
+                    // widgets = widgets.update({
+                    //     add: [
+                    //         {
+                    //             from: updated.value.from,
+                    //             to: updated.value.to,
+                    //             value: Decoration.widget({
+                    //                 widget: new GeminiWidget(updated.value.id),
+                    //                 side: 1,
+                    //                 block: true,
+                    //                 id: updated.value.id,
+                    //             }),
+                    //         },
+                    //     ],
+                    // })
                 }
             }
             return widgets
         },
+        // provide: (field) =>
+        //     EditorView.atomicRanges.of((view) => {
+        //         return view.state.field(field)
+        //     }),
         provide: (field) => EditorView.decorations.from(field),
     })
+    return f
 }
 
-class GeminiWidget extends WidgetType {
-    private elContainer: HTMLElement = document.createElement('div')
-
-    private plugin: GeminiAssistantPlugin
-
-    private prompt: string
-
+export class GeminiExtension {
     private gemini: Gemini
+    private field: StateField<DecorationSet>
 
-    private content = ''
-
-    constructor(plugin: GeminiAssistantPlugin, prompt: string) {
-        super()
-        this.prompt = prompt
-        this.plugin = plugin
+    constructor(plugin: GeminiAssistantPlugin) {
         this.gemini = new Gemini(plugin)
-        // this.elContainer.addClass('gemini-widget')
-        this.generate()
+        this.field = createStateFiled()
     }
 
-    async generate() {
-        const result = await this.gemini.generate(this.prompt)
-        if (result) {
-            for await (const chunk of result.stream as any) {
-                this.elContainer.setText((this.content += chunk.text()))
+    public async generate(view: EditorView, prompt: any) {
+        let cursor = view.state.selection.main.anchor
+        let line = view.state.doc.lineAt(cursor)
+        let id = nanoid()
+
+        // append line breaks
+        view.dispatch({
+            changes: [
+                {
+                    from: line.to,
+					// insert callout block
+                    insert: '\n\n>[!gemini] Gemini\n> ',
+                },
+            ],
+            effects: [addGemini.of({ from: line.to, to: line.to, prompt, id })],
+        })
+
+        const result = await this._generate(prompt)
+        let prevChunk = null
+        for await (const chunk of result.stream) {
+            if (prevChunk !== null) {
+                this.processChunk(view, id, prevChunk.text(), false)
             }
-            const md = this.elContainer.createDiv()
-            await MarkdownRenderer.render(
-                this.plugin.app,
-                this.content,
-                md,
-                '',
-                new MarkdownRenderChild(md),
-            )
-            this.elContainer.setText('')
-            this.elContainer.append(md)
+            prevChunk = chunk
+        }
+        if (prevChunk !== null) {
+            this.processChunk(view, id, prevChunk.text(), true)
         }
     }
 
-    toDOM(view: EditorView): HTMLElement {
-        return this.elContainer
+    private processChunk(
+        view: EditorView,
+        id: string,
+        text: string,
+        last: boolean,
+    ) {
+        let to = this.findRangeById(view, id)
+        if (to < 0) {
+            return
+        }
+
+        const pattern = /\r?\n/g
+        let format = text.replace(pattern, '\n> ')
+
+        if (last) {
+            format += '\n'
+        }
+
+        const changes = [
+            {
+                from: to,
+                insert: format,
+            },
+        ]
+
+        view.dispatch({ changes })
     }
 
-    ignoreEvent(event: Event): boolean {
-        return true
+    private findRangeById(view: EditorView, id: string) {
+        const range = view.state.field(this.field).iter()
+        let deco = range.value
+        let to = -1
+
+        while (deco) {
+            if (deco.spec.id == id) {
+                to = range.to - 1
+                break
+            }
+            range.next()
+            deco = range.value
+        }
+
+        return to
     }
 
-    eq(widget: GeminiWidget): boolean {
-        return widget.prompt == this.prompt
+    private async _generate(prompt: any) {
+        const result = await this.gemini.generate(prompt)
+        return result ? (result as any) : { stream: [] }
+    }
+
+    public getExtension() {
+        return this.field
     }
 }
+
+export const addGemini = StateEffect.define<{
+    id: string
+    from: number
+    to: number
+    prompt: any
+}>({
+    map: (value, change) => {
+        return {
+            from: change.mapPos(value.from),
+            to: change.mapPos(value.to, 1),
+            prompt,
+            id: value.id,
+        }
+    },
+})

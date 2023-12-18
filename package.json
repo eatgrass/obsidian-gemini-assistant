@@ -16,7 +16,6 @@
         "@types/node": "^16.11.6",
         "@typescript-eslint/eslint-plugin": "5.29.0",
         "@typescript-eslint/parser": "5.29.0",
-        "@codemirror/autocomplete": "^6.2.0",
         "builtin-modules": "3.3.0",
         "esbuild": "0.17.3",
         "esbuild-svelte": "^0.8.0",
@@ -27,5 +26,8 @@
         "svelte-preprocess": "^5.0.4",
         "tslib": "2.4.0",
         "typescript": "5.2.2"
+    },
+    "dependencies": {
+        "nanoid": "^5.0.4"
     }
 }

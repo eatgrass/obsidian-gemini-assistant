@@ -1,12 +1,13 @@
 import GeminiChatSettings, { DEFAULT_SETTINGS, type Settings } from 'Settings'
 import { Plugin, Editor, MarkdownView, type MarkdownFileInfo } from 'obsidian'
 import AssistantSuggestor from 'AssistantSuggestor'
-import { createState, addGemini, appendGemini } from 'GeminiExtension'
-import { EditorView } from '@codemirror/view'
+import { GeminiExtension } from 'GeminiExtension'
 import { type Extension } from '@codemirror/state'
 
 export default class GeminiAssistantPlugin extends Plugin {
     private cmExtension: Extension[] = []
+
+    public gemini?: GeminiExtension
 
     private settings?: GeminiChatSettings
 
@@ -23,8 +24,8 @@ export default class GeminiAssistantPlugin extends Plugin {
         this.updateEditorExtensions()
 
         this.addCommand({
-            id: 'gemini-chat',
-            name: 'Chat',
+            id: 'gemini-assistant',
+            name: 'Open assistant',
             editorCallback: (
                 editor: Editor,
                 ctx: MarkdownView | MarkdownFileInfo,
@@ -34,53 +35,15 @@ export default class GeminiAssistantPlugin extends Plugin {
                 }
             },
         })
-
-        this.addCommand({
-            id: 'gemini-append',
-            name: 'Append',
-            editorCallback: (
-                editor: Editor,
-                ctx: MarkdownView | MarkdownFileInfo,
-            ) => {
-                if (ctx instanceof MarkdownView) {
-                    // @ts-expect-error, not typed
-                    let view = ctx.editor.cm as EditorView
-                    view.dispatch({
-                        effects: [appendGemini.of('dsfs')],
-                    })
-                }
-            },
-        })
-        this.addCommand({
-            id: 'gemini-test',
-            name: 'Test',
-            editorCallback: (
-                editor: Editor,
-                ctx: MarkdownView | MarkdownFileInfo,
-            ) => {
-                if (ctx instanceof MarkdownView) {
-                    // @ts-expect-error, not typed
-                    let view = ctx.editor.cm as EditorView
-                }
-            },
-        })
-
-        this.registerEvent(
-            this.app.workspace.on('editor-menu', (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item.setTitle('Test').onClick(async () => {
-                        editor.replaceRange('Hello', editor.getCursor())
-                    })
-                })
-            }),
-        )
     }
 
     public updateEditorExtensions() {
+        this.gemini = new GeminiExtension(this)
+
         // Don't create a new array, keep the same reference
         this.cmExtension.length = 0
         // editor extension for inline queries: enabled regardless of settings (enableInlineDataview/enableInlineDataviewJS)
-        this.cmExtension.push(createState(this))
+        this.cmExtension.push(this.gemini.getExtension())
         this.app.workspace.updateOptions()
     }
 }

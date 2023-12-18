@@ -2,35 +2,38 @@ import Gemini from 'GeminiService'
 import type GeminiAssistantPlugin from 'main'
 import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
-import { addGemini, annotation } from 'GeminiExtension'
+import { GeminiExtension } from 'GeminiExtension'
 
-enum Command {
-    'ASK_SELECTION',
-    'ASK_DOC',
+enum PromptType {
+    DOCUMENT,
+    SELECTION,
 }
 
 type Suggestion = {
-    command: Command
+    prompt: string
     display: string
+    type: PromptType
 }
 
 export default class AssistantSuggestor extends SuggestModal<Suggestion> {
     private editor: Editor
 
-    private prompt: any = ''
+    private query: any = ''
 
     private view: EditorView
 
-    private gemini: Gemini
+    private gemini?: GeminiExtension
 
     private suggestions: Suggestion[] = [
         {
-            command: Command.ASK_SELECTION,
+            prompt: '',
             display: 'Ask Gemini',
+            type: PromptType.SELECTION,
         },
         {
-            command: Command.ASK_DOC,
+            prompt: '',
             display: 'Ask Gemini (document)',
+            type: PromptType.DOCUMENT,
         },
     ]
 
@@ -42,19 +45,17 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         super(plugin.app)
         this.editor = editor
         this.inputEl.placeholder = 'Prompt...'
-        this.gemini = new Gemini(plugin)
+        this.gemini = plugin.gemini
         // @ts-expect-error, not typed
         this.view = view.editor.cm
         this.open()
     }
 
-    getSuggestions(prompt: string): Suggestion[] | Promise<Suggestion[]> {
-        this.prompt = prompt
-
+    getSuggestions(query: string): Suggestion[] | Promise<Suggestion[]> {
+        this.query = query
         const suggestions = [...this.suggestions]
         if (this.editor.somethingSelected()) {
             suggestions[0].display = suggestions[0].display + ' (selection)'
-            this.prompt = [prompt, this.editor.getSelection()]
         }
 
         return suggestions
@@ -70,25 +71,29 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         item: Suggestion,
         evt: MouseEvent | KeyboardEvent,
     ) {
-        // const stream = await this.session.send(this.prompt)
-        // const result = await this.gemini.generate(this.prompt)
+        const prompt = []
+        if (this.query) {
+            prompt.push(this.query)
+        }
+        if (item.prompt) {
+            prompt.push(item.prompt)
+        }
 
-        const cursor = this.editor.getCursor()
-        const line = this.view.state.doc.line(cursor.line + 1)
+        if (item.type == PromptType.DOCUMENT) {
+            const doc = this.editor.getValue()
+            if (doc) {
+                prompt.push(doc)
+            }
+        }
 
-        // new line below current cursor position
-        this.view.dispatch({
-            changes: [
-                {
-                    from: line.to,
-                    insert: '\n\n',
-                },
-            ],
-            // selection: { anchor: line.to + 2 },
-            effects: [addGemini.of({ pos: line.to, prompt: this.prompt })],
-			annotations: annotation.of("gemini")
-        })
+        if (item.type == PromptType.SELECTION) {
+            const selection = this.editor.getSelection()
+            if (selection) {
+                prompt.push(selection)
+            }
+        }
 
-        this.prompt = ''
+        this.gemini?.generate(this.view, prompt)
+        this.query = ''
     }
 }
