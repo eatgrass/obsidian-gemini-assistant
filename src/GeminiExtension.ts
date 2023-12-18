@@ -55,7 +55,7 @@ const createStateFiled = () => {
 }
 
 export class GeminiExtension {
-    private gemini: Gemini
+    public gemini: Gemini
     private field: StateField<DecorationSet>
 
     constructor(plugin: GeminiAssistantPlugin) {

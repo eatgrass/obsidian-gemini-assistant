@@ -3,6 +3,7 @@ import type GeminiAssistantPlugin from 'main'
 import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
 import { GeminiExtension } from 'GeminiExtension'
+import SuggestionComponent from './components/SuggestionComponent.svelte'
 
 export enum PromptType {
     DOCUMENT = 'DOCUMENT',
@@ -13,6 +14,7 @@ export type Suggestion = {
     prompt: string
     display: string
     type: PromptType
+    _prompt?: any[]
 }
 
 export default class AssistantSuggestor extends SuggestModal<Suggestion> {
@@ -64,13 +66,20 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
             suggestions[0].display = suggestions[0].display + ' (selection)'
         }
 
-        return suggestions
+        return suggestions.map((suggestion) => {
+            suggestion._prompt = this.getPrompt(suggestion)
+            return suggestion
+        })
     }
 
     renderSuggestion(suggestion: Suggestion, el: HTMLElement) {
-        const span = el.createSpan()
-        span.setText(suggestion.display)
-        el.append(span)
+        new SuggestionComponent({
+            target: el,
+            props: {
+                item: suggestion,
+                gemini: this.gemini?.gemini,
+            },
+        })
     }
 
     async onChooseSuggestion(
@@ -101,5 +110,30 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
 
         this.gemini?.generate(this.view, prompt)
         this.query = ''
+    }
+
+    private getPrompt(item: Suggestion) {
+        const prompt = []
+        if (this.query) {
+            prompt.push(this.query)
+        }
+        if (item.prompt) {
+            prompt.push(item.prompt)
+        }
+
+        if (item.type == PromptType.DOCUMENT) {
+            const doc = this.editor.getValue()
+            if (doc) {
+                prompt.push(doc)
+            }
+        }
+
+        if (item.type == PromptType.SELECTION) {
+            const selection = this.editor.getSelection()
+            if (selection) {
+                prompt.push(selection)
+            }
+        }
+        return prompt
     }
 }

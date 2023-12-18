@@ -1,21 +1,23 @@
-import type GeminiAssistantPlugin from 'main'
+import GeminiAssistantPlugin from 'main'
 import { GoogleGenerativeAI } from 'generative-ai.mjs'
 
 export type Model = 'gemini-pro' | 'gemini-pro-vision'
 
 export default class Gemini {
     private genAI: GoogleGenerativeAI
-    private model
+    private model: Model
+    private plugin: GeminiAssistantPlugin
 
     constructor(plugin: GeminiAssistantPlugin, model?: Model) {
-        const m = model || plugin.getSettings().model
+        this.model = model || plugin.getSettings().model
+        this.plugin = plugin
         this.genAI = new GoogleGenerativeAI(plugin.getSettings().apiKey)
-        this.model = this.genAI.getGenerativeModel({ model: m })
     }
 
     public startChat(model?: Model): GeminiChat {
         return new GeminiChat(
-            model ? this.genAI.getGenerativeModel({ model }) : this.model,
+            this.plugin,
+            this.genAI.getGenerativeModel({ model: this.model }),
         )
     }
 
@@ -23,19 +25,29 @@ export default class Gemini {
         if (!prompt) {
             return
         }
-        return await this.model.generateContentStream(prompt)
+        const model = this.genAI.getGenerativeModel({ model: this.model })
+        model.generationConfig = {
+            maxOutputTokens: this.plugin.getSettings().maxOutputTokens,
+        }
+        return await model.generateContentStream(prompt)
+    }
+
+    public async countToken(prompt: any) {
+        const model = this.genAI.getGenerativeModel({ model: this.model })
+        const { totalTokens } = await model.countTokens(prompt)
+        return totalTokens
     }
 }
 
 class GeminiChat {
-    private model
+    private model: any
     private session
 
-    constructor(model: any) {
+    constructor(plugin: GeminiAssistantPlugin, model: any) {
         this.model = model
         this.session = this.model.startChat({
             generateConfig: {
-                maxOutputTokens: 1024,
+                maxOutputTokens: plugin.getSettings().maxOutputTokens,
             },
         })
     }
