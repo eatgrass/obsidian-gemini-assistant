@@ -1,14 +1,17 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 import GeminiAssistantPlugin from 'main'
 import { type Model } from 'GeminiService'
+import type { Suggestion } from 'AssistantSuggestor'
 
 export interface Settings {
     apiKey: string
     model: Model
+    prompts: Suggestion[]
 }
 export const DEFAULT_SETTINGS: Settings = {
     apiKey: '',
     model: 'gemini-pro',
+    prompts: [],
 }
 
 const MODELS: Record<Model, { description: string }> = {
@@ -46,17 +49,31 @@ export default class GeminiSettings extends PluginSettingTab {
             })
         })
 
-        new Setting(containerEl).setName('Model').addDropdown((select) => {
-            Object.entries(MODELS).forEach(([key, _]) => {
-                select.addOptions({
-                    [key]: key,
-                })
+        // TODO suppoert vision modal
+        // new Setting(containerEl).setName('Model').addDropdown((select) => {
+        //     Object.entries(MODELS).forEach(([key, _]) => {
+        //         select.addOptions({
+        //             [key]: key,
+        //         })
+        //     })
+        //     select.setValue(this.settings.model)
+        //     select.onChange((value) => {
+        //         this.updateSettings({ model: value as Model })
+        //     })
+        // })
+
+        // for (let prompt of this.settings.prompts) {
+        new Setting(containerEl)
+            .setName('Hello')
+            .addExtraButton((button) => {
+				button.setIcon('edit')
+				button.setTooltip('Edit')
+			})
+            .addExtraButton((button) => {
+                button.setIcon('trash')
+				button.setTooltip('Remove')
             })
-            select.setValue(this.settings.model)
-            select.onChange((value) => {
-                this.updateSettings({ model: value as Model })
-            })
-        })
+        // }
     }
 
     public getSettings(): Settings {

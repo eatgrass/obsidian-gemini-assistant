@@ -4,12 +4,12 @@ import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
 import { GeminiExtension } from 'GeminiExtension'
 
-enum PromptType {
+export enum PromptType {
     DOCUMENT,
     SELECTION,
 }
 
-type Suggestion = {
+export type Suggestion = {
     prompt: string
     display: string
     type: PromptType
