@@ -5,8 +5,8 @@ import { EditorView } from '@codemirror/view'
 import { GeminiExtension } from 'GeminiExtension'
 
 export enum PromptType {
-    DOCUMENT,
-    SELECTION,
+    DOCUMENT = 'DOCUMENT',
+    SELECTION = 'SELECTION',
 }
 
 export type Suggestion = {
@@ -23,6 +23,8 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
     private view: EditorView
 
     private gemini?: GeminiExtension
+
+    private plugin: GeminiAssistantPlugin
 
     private suggestions: Suggestion[] = [
         {
@@ -43,6 +45,7 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         view: MarkdownView,
     ) {
         super(plugin.app)
+        this.plugin = plugin
         this.editor = editor
         this.inputEl.placeholder = 'Prompt...'
         this.gemini = plugin.gemini
@@ -53,7 +56,10 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
 
     getSuggestions(query: string): Suggestion[] | Promise<Suggestion[]> {
         this.query = query
-        const suggestions = [...this.suggestions]
+        const suggestions = [
+            ...this.suggestions,
+            ...this.plugin.getSettings().prompts,
+        ]
         if (this.editor.somethingSelected()) {
             suggestions[0].display = suggestions[0].display + ' (selection)'
         }

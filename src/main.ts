@@ -15,6 +15,13 @@ export default class GeminiAssistantPlugin extends Plugin {
         return this.settings?.getSettings() || DEFAULT_SETTINGS
     }
 
+    public async updateSettings(
+        newSettings: Partial<Settings>,
+        refresh: boolean = false,
+    ) {
+        await this.settings?.updateSettings(newSettings, refresh)
+    }
+
     async onload() {
         const settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) }
         this.settings = new GeminiChatSettings(this, settings)
