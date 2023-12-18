@@ -63,7 +63,11 @@ export class GeminiExtension {
         this.field = createStateFiled()
     }
 
-    public async generate(view: EditorView, prompt: any) {
+    public async generate(view: EditorView, prompt: string[] = []) {
+        if (prompt.length == 0) {
+            return
+        }
+
         let cursor = view.state.selection.main.anchor
         let line = view.state.doc.lineAt(cursor)
         let id = nanoid()
@@ -73,7 +77,7 @@ export class GeminiExtension {
             changes: [
                 {
                     from: line.to,
-					// insert callout block
+                    // insert callout block
                     insert: '\n\n>[!gemini] Gemini\n> ',
                 },
             ],
