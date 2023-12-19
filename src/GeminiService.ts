@@ -1,5 +1,6 @@
 import GeminiAssistantPlugin from 'main'
 import { GoogleGenerativeAI } from 'generative-ai.mjs'
+import type { Prompt } from 'Settings'
 
 export type Model = 'gemini-pro' | 'gemini-pro-vision'
 
@@ -21,18 +22,27 @@ export default class Gemini {
         )
     }
 
-    public async generate(prompt: any) {
-        if (!prompt) {
+    public async generate(option: Prompt) {
+        if (!option.prompt || option.prompt.length == 0) {
             return
         }
-        const model = this.genAI.getGenerativeModel({ model: this.model })
+        const model = this.genAI.getGenerativeModel({ model: option.model })
+
         model.generationConfig = {
-            maxOutputTokens: this.plugin.getSettings().maxOutputTokens,
+            stopSequences: option.config.stopSequences,
+            maxOutputTokens: option.config.maxOutputTokens,
+            temperature: option.config.temperature,
+            topP: option.config.topP,
+            topK: option.config.topK,
         }
-        return await model.generateContentStream(prompt)
+        return await model.generateContentStream(option.prompt)
     }
 
     public async countToken(prompt: any) {
+        if (!prompt || prompt.length == 0) {
+            return 0
+        }
+
         const model = this.genAI.getGenerativeModel({ model: this.model })
         const { totalTokens } = await model.countTokens(prompt)
         return totalTokens
@@ -45,11 +55,7 @@ class GeminiChat {
 
     constructor(plugin: GeminiAssistantPlugin, model: any) {
         this.model = model
-        this.session = this.model.startChat({
-            generateConfig: {
-                maxOutputTokens: plugin.getSettings().maxOutputTokens,
-            },
-        })
+        this.session = this.model.startChat()
     }
 
     public async send(msg: string) {

@@ -1,23 +1,11 @@
-import Gemini from 'GeminiService'
 import type GeminiAssistantPlugin from 'main'
 import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
 import { GeminiExtension } from 'GeminiExtension'
 import SuggestionComponent from './components/SuggestionComponent.svelte'
+import { PromptType, type Prompt as PromptOption } from 'Settings'
 
-export enum PromptType {
-    DOCUMENT = 'DOCUMENT',
-    SELECTION = 'SELECTION',
-}
-
-export type Suggestion = {
-    prompt: string
-    display: string
-    type: PromptType
-    _prompt?: any[]
-}
-
-export default class AssistantSuggestor extends SuggestModal<Suggestion> {
+export default class AssistantSuggestor extends SuggestModal<PromptOption> {
     private editor: Editor
 
     private query: any = ''
@@ -27,19 +15,6 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
     private gemini?: GeminiExtension
 
     private plugin: GeminiAssistantPlugin
-
-    private suggestions: Suggestion[] = [
-        {
-            prompt: '',
-            display: 'Ask Gemini',
-            type: PromptType.SELECTION,
-        },
-        {
-            prompt: '',
-            display: 'Ask Gemini (document)',
-            type: PromptType.DOCUMENT,
-        },
-    ]
 
     constructor(
         plugin: GeminiAssistantPlugin,
@@ -56,79 +31,53 @@ export default class AssistantSuggestor extends SuggestModal<Suggestion> {
         this.open()
     }
 
-    getSuggestions(query: string): Suggestion[] | Promise<Suggestion[]> {
+    getSuggestions(query: string): PromptOption[] | Promise<PromptOption[]> {
         this.query = query
-        const suggestions = [
-            ...this.suggestions,
-            ...this.plugin.getSettings().prompts,
-        ]
-        if (this.editor.somethingSelected()) {
-            suggestions[0].display = suggestions[0].display + ' (selection)'
-        }
 
-        return suggestions.map((suggestion) => {
-            suggestion._prompt = this.getPrompt(suggestion)
-            return suggestion
+        return this.plugin.getSettings().prompts.map((option) => {
+            const prompt = this.getPrompt(option)
+            return {
+                ...option,
+                prompt,
+            }
         })
     }
 
-    renderSuggestion(suggestion: Suggestion, el: HTMLElement) {
+    renderSuggestion(option: PromptOption, el: HTMLElement) {
         new SuggestionComponent({
             target: el,
             props: {
-                item: suggestion,
+                option,
                 gemini: this.gemini?.gemini,
             },
         })
     }
 
     async onChooseSuggestion(
-        item: Suggestion,
+        option: PromptOption,
         evt: MouseEvent | KeyboardEvent,
     ) {
-        const prompt = []
-        if (this.query) {
-            prompt.push(this.query)
-        }
-        if (item.prompt) {
-            prompt.push(item.prompt)
-        }
-
-        if (item.type == PromptType.DOCUMENT) {
-            const doc = this.editor.getValue()
-            if (doc) {
-                prompt.push(doc)
-            }
-        }
-
-        if (item.type == PromptType.SELECTION) {
-            const selection = this.editor.getSelection()
-            if (selection) {
-                prompt.push(selection)
-            }
-        }
-
-        this.gemini?.generate(this.view, prompt)
+        this.gemini?.generate(this.view, option)
         this.query = ''
     }
 
-    private getPrompt(item: Suggestion) {
+    private getPrompt(option: PromptOption) {
         const prompt = []
         if (this.query) {
             prompt.push(this.query)
         }
-        if (item.prompt) {
-            prompt.push(item.prompt)
+        if (option.prompt) {
+            prompt.push(option.prompt)
         }
 
-        if (item.type == PromptType.DOCUMENT) {
+        if (option.type == PromptType.DOCUMENT) {
             const doc = this.editor.getValue()
             if (doc) {
                 prompt.push(doc)
             }
         }
 
-        if (item.type == PromptType.SELECTION) {
+        if (option.type == PromptType.SELECTION) {
             const selection = this.editor.getSelection()
             if (selection) {
                 prompt.push(selection)

@@ -1,29 +1,75 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 import GeminiAssistantPlugin from 'main'
 import { type Model } from 'GeminiService'
-import type { Suggestion } from 'AssistantSuggestor'
 import CustomPrompt from 'CustomPrompt'
+
+export enum PromptType {
+    DOCUMENT = 'DOCUMENT',
+    SELECTION = 'SELECTION',
+}
+
+export type Prompt = {
+    display: string
+    type: PromptType
+    config: GeminiConfig
+    model: Model
+    prompt: string | any[]
+}
+
+export type GeminiConfig = {
+    stopSequences?: string[]
+    outputTokenLimit: number
+    maxOutputTokens: number
+    temperature: number
+    topP: number
+    topK: number
+    inputTokenLimit: number
+}
 
 export interface Settings {
     apiKey: string
     model: Model
-    prompts: Suggestion[]
-    maxOutputTokens: number
+    prompts: Prompt[]
 }
+
+export const DEFAULT_GEMINI_CONFIGS: Record<Model, GeminiConfig> = {
+    'gemini-pro': {
+        topK: 1,
+        topP: 1,
+        temperature: 0.9,
+        outputTokenLimit: 2048,
+        maxOutputTokens: 400,
+        inputTokenLimit: 30720,
+    },
+    'gemini-pro-vision': {
+        topK: 32,
+        topP: 1,
+        temperature: 0.4,
+        outputTokenLimit: 4096,
+        maxOutputTokens: 400,
+        inputTokenLimit: 12288,
+    },
+}
+
 export const DEFAULT_SETTINGS: Settings = {
     apiKey: '',
     model: 'gemini-pro',
-    prompts: [],
-    maxOutputTokens: 400,
-}
-
-const MODELS: Record<Model, { description: string }> = {
-    'gemini-pro': {
-        description: 'text generate',
-    },
-    'gemini-pro-vision': {
-        description: 'multi modal',
-    },
+    prompts: [
+        {
+            display: 'Ask Gemini (Selection)',
+            type: PromptType.SELECTION,
+            model: 'gemini-pro',
+            config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
+            prompt: '',
+        },
+        {
+            display: 'Ask Gemini (Document)',
+            type: PromptType.DOCUMENT,
+            model: 'gemini-pro',
+            config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
+            prompt: '',
+        },
+    ],
 }
 
 export default class GeminiSettings extends PluginSettingTab {
@@ -57,37 +103,6 @@ export default class GeminiSettings extends PluginSettingTab {
                 this.updateSettings({ apiKey })
             })
         })
-
-        // TODO suppoert vision modal
-        // new Setting(containerEl).setName('Model').addDropdown((select) => {
-        //     Object.entries(MODELS).forEach(([key, _]) => {
-        //         select.addOptions({
-        //             [key]: key,
-        //         })
-        //     })
-        //     select.setValue(this.settings.model)
-        //     select.onChange((value) => {
-        //         this.updateSettings({ model: value as Model })
-        //     })
-        // })
-        //
-        new Setting(containerEl)
-            .setName('Max output tokens')
-            .setDesc(
-                'Specifies the maximum number of tokens that can be generated in the response. A token is approximately four characters. 100 tokens correspond to roughly 60-80 words.',
-            )
-            .addText((text) => {
-                text.setValue(this.settings.maxOutputTokens.toString())
-                text.onChange((value) => {
-                    if (value.match(/^[1-9]\d*$/)) {
-                        this.updateSettings({
-                            maxOutputTokens: parseInt(value),
-                        })
-                    } else {
-                        text.setValue(this.settings.maxOutputTokens.toString())
-                    }
-                })
-            })
 
         new Setting(containerEl).setName('Prompts').addExtraButton((button) => {
             button.setIcon('plus')
