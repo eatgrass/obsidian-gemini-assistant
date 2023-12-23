@@ -81,10 +81,10 @@ const send = async () => {
                 ]
             } else {
                 history[index].parts += chunk.text()
+				await renderMd(index)
             }
             count++
         }
-        await renderMd(index)
         generating = false
     }
 }
@@ -203,7 +203,7 @@ const enter = (e: KeyboardEvent) => {
                             {/if}
                         </div>
                         <div class="markdown-rendered gemini-conv-text">
-                            {conv.parts}
+                            <!-- {conv.parts} -->
                         </div>
                     </div>
                 </div>
