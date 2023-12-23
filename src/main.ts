@@ -53,23 +53,27 @@ export default class GeminiAssistantPlugin extends Plugin {
             },
         })
 
-        this.addRibbonIcon('message-circle', 'Open Gemini chat', () => {
-            this.activateChatView()
+        this.addRibbonIcon('message-circle', 'Toggle Gemini chat', () => {
+            this.toggleChat()
         })
 
         this.addCommand({
             id: 'gemini-chat',
             name: 'Chat',
             callback: () => {
-                let { workspace } = this.app
-                let leaves = workspace.getLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
-                if (leaves.length > 0) {
-                    workspace.detachLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
-                } else {
-                    this.activateChatView()
-                }
+                this.toggleChat()
             },
         })
+    }
+
+    async toggleChat() {
+        let { workspace } = this.app
+        let leaves = workspace.getLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+        if (leaves.length > 0) {
+            workspace.detachLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+        } else {
+            this.activateChatView()
+        }
     }
 
     async activateChatView() {
