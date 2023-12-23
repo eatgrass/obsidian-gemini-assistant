@@ -5,14 +5,12 @@ import type GeminiAssistantPlugin from 'main'
 export const VIEW_TYPE_GEMINI_CHAT = 'gemini-chat-view'
 
 export class ChatView extends ItemView {
-
-
-	private plugin: GeminiAssistantPlugin
+    private plugin: GeminiAssistantPlugin
 
     constructor(plugin: GeminiAssistantPlugin, leaf: WorkspaceLeaf) {
         super(leaf)
-		this.plugin = plugin
-        this.icon = 'timer'
+        this.plugin = plugin
+        this.icon = 'message-circle'
     }
 
     getViewType(): string {
@@ -24,11 +22,14 @@ export class ChatView extends ItemView {
     }
 
     async onOpen() {
+        this.contentEl.style.overflowY = 'hidden'
         new ChatComponent({
             target: this.contentEl,
             props: {
-				gemini: this.plugin.gemini?.gemini.startChat()
-			},
+                gemini: this.plugin.gemini?.gemini.startChat(),
+                view: this,
+                app: this.plugin.app,
+            },
         })
     }
 

@@ -3,9 +3,7 @@ export let width: number = 12
 export let height: number = 12
 </script>
 
-<svg
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+<svg fill="none" xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 1080 1080"
     {width}
     {height}
