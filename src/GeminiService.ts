@@ -49,7 +49,7 @@ export default class Gemini {
     }
 }
 
-class GeminiChat {
+export class GeminiChat {
     private model: any
     private session
 
@@ -64,12 +64,8 @@ class GeminiChat {
         }
 
         const result = await this.session.sendMessageStream(msg)
-
-        return async (callback: (c: string) => Promise<void>) => {
-            for await (const chunk of result.stream as any) {
-                await callback(chunk.text())
-            }
-        }
+        console.log(this.session)
+        return result
     }
 }
 

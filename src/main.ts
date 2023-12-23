@@ -1,8 +1,15 @@
 import GeminiChatSettings, { DEFAULT_SETTINGS, type Settings } from 'Settings'
-import { Plugin, Editor, MarkdownView, type MarkdownFileInfo } from 'obsidian'
+import {
+    Plugin,
+    Editor,
+    MarkdownView,
+    type MarkdownFileInfo,
+    WorkspaceLeaf,
+} from 'obsidian'
 import AssistantSuggestor from 'AssistantSuggestor'
 import { GeminiExtension } from 'GeminiExtension'
 import { type Extension } from '@codemirror/state'
+import { VIEW_TYPE_GEMINI_CHAT, ChatView } from 'ChatView'
 
 export default class GeminiAssistantPlugin extends Plugin {
     private cmExtension: Extension[] = []
@@ -29,7 +36,10 @@ export default class GeminiAssistantPlugin extends Plugin {
         this.cmExtension = []
         this.registerEditorExtension(this.cmExtension)
         this.updateEditorExtensions()
-
+        this.registerView(
+            VIEW_TYPE_GEMINI_CHAT,
+            (leaf) => new ChatView(this, leaf),
+        )
         this.addCommand({
             id: 'gemini-assistant',
             name: 'Open assistant',
@@ -42,8 +52,44 @@ export default class GeminiAssistantPlugin extends Plugin {
                 }
             },
         })
+
+        this.addRibbonIcon('message-circle', 'Open Gemini chat', () => {
+            this.activateChatView()
+        })
+
+        this.addCommand({
+            id: 'gemini-chat',
+            name: 'Chat',
+            callback: () => {
+                let { workspace } = this.app
+                let leaves = workspace.getLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+                if (leaves.length > 0) {
+                    workspace.detachLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+                } else {
+                    this.activateChatView()
+                }
+            },
+        })
     }
 
+    async activateChatView() {
+        let { workspace } = this.app
+
+        let leaf: WorkspaceLeaf | null = null
+        let leaves = workspace.getLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+
+        if (leaves.length > 0) {
+            leaf = leaves[0]
+        } else {
+            leaf = workspace.getRightLeaf(false)
+            await leaf.setViewState({
+                type: VIEW_TYPE_GEMINI_CHAT,
+                active: true,
+            })
+        }
+
+        workspace.revealLeaf(leaf)
+    }
     public updateEditorExtensions() {
         this.gemini = new GeminiExtension(this)
 
