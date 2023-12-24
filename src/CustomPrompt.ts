@@ -22,8 +22,6 @@ export default class CustomPrompt extends Modal {
                       prompt: '',
                   }
 
-		console.log(plugin.getSettings())
-
         if (this.prompt) {
             this.titleEl.setText(this.prompt.display)
         }

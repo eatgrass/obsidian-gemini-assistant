@@ -64,7 +64,6 @@ export class GeminiChat {
         }
 
         const result = await this.session.sendMessageStream(msg)
-        console.log(this.session)
         return result
     }
 }

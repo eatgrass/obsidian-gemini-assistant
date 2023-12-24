@@ -126,9 +126,7 @@ export default class GeminiSettings extends PluginSettingTab {
                     button.setIcon('trash')
                     button.setTooltip('Remove')
                     button.onClick(() => {
-                        console.log(this.settings.prompts)
                         this.settings.prompts.splice(i, 1)
-                        console.log(this.settings.prompts)
                         this.updateSettings(
                             { prompts: this.settings.prompts },
                             true,

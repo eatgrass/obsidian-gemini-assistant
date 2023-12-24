@@ -41,7 +41,6 @@ const renderMd = async (index: number) => {
     const els = document.getElementsByClassName('gemini-conv-text')
     if (els.length > 0) {
         const el = els.item(index) as HTMLElement
-        console.log('el', index, el)
         if (el) {
             el.empty()
             await MarkdownRenderer.render(
