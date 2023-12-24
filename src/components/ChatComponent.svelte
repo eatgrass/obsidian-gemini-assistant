@@ -43,7 +43,7 @@ const renderMd = async (index: number) => {
         const el = els.item(index) as HTMLElement
         console.log('el', index, el)
         if (el) {
-            el.setText('')
+            el.empty()
             await MarkdownRenderer.render(
                 app,
                 history[index].parts,
@@ -51,6 +51,11 @@ const renderMd = async (index: number) => {
                 '',
                 view,
             )
+            el.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest',
+            })
         }
     }
 }
@@ -81,7 +86,7 @@ const send = async () => {
                 ]
             } else {
                 history[index].parts += chunk.text()
-				await renderMd(index)
+                await renderMd(index)
             }
             count++
         }
@@ -252,6 +257,11 @@ const enter = (e: KeyboardEvent) => {
     flex: 1 1 0%;
     width: 100%;
     overflow-y: scroll;
+    scrollbar-width: none;
+}
+
+.gemini-conversation::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
 }
 
 .gemini-conv-item {
