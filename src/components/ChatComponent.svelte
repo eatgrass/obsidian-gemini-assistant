@@ -1,7 +1,8 @@
 <script lang="ts">
-import { tick } from 'svelte'
+import { tick, onMount } from 'svelte'
 import type { GeminiChat } from 'GeminiService'
 import { MarkdownRenderer, type ItemView, type App } from 'obsidian'
+
 export let gemini: GeminiChat
 export let view: ItemView
 export let app: App
@@ -13,9 +14,14 @@ type Message = {
     parts: string
 }
 
+onMount(() => {
+    setTimeout(() => {
+        textarea?.focus()
+    }, 1000)
+})
+
 let history: Message[] = []
 
-let current: number = 0
 let generating: boolean = false
 
 const textchange = () => {
@@ -83,10 +89,12 @@ const send = async () => {
                         parts: chunk.text(),
                     },
                 ]
+                await tick()
             } else {
                 history[index].parts += chunk.text()
-                await renderMd(index)
             }
+
+            await renderMd(index)
             count++
         }
         generating = false
@@ -339,6 +347,8 @@ const enter = (e: KeyboardEvent) => {
     display: flex;
     flex-direction: column;
     flex: 1 1 0%;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .gemini-conv-name {
