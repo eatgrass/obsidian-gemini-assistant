@@ -20,6 +20,8 @@ onMount(() => {
     }, 1000)
 })
 
+let container: HTMLElement
+
 let history: Message[] = []
 
 let generating: boolean = false
@@ -29,7 +31,7 @@ const textchange = () => {
     textarea.style.height = `${height}px`
 }
 
-const addUserMsg = (msg: string) => {
+const addUserMsg = async (msg: string) => {
     const index = history.length
     history = [
         ...history,
@@ -39,12 +41,12 @@ const addUserMsg = (msg: string) => {
         },
     ]
 
+    await tick()
     renderMd(index)
 }
 
 const renderMd = async (index: number) => {
-    await tick()
-    const els = document.getElementsByClassName('gemini-conv-text')
+    const els = container.getElementsByClassName('gemini-conv-text')
     if (els.length > 0) {
         const el = els.item(index) as HTMLElement
         if (el) {
@@ -75,30 +77,39 @@ const send = async () => {
     if (textarea.value) {
         const msg = textarea.value
         textarea.value = ''
-        addUserMsg(msg)
-        const result = await gemini.send(msg)
-        let count = 0
-        let index = history.length
+        await addUserMsg(msg)
+        try {
+            const result = await gemini.send(msg)
+            let count = 0
+            let index = history.length
 
-        for await (const chunk of result.stream) {
-            if (count == 0) {
-                history = [
-                    ...history,
-                    {
-                        role: 'model',
-                        parts: chunk.text(),
-                    },
-                ]
+            for await (const chunk of result.stream) {
+                if (count == 0) {
+                    history = [
+                        ...history,
+                        {
+                            role: 'model',
+                            parts: chunk.text(),
+                        },
+                    ]
+                } else {
+                    history[index].parts += chunk.text()
+                }
+
                 await tick()
-            } else {
-                history[index].parts += chunk.text()
+                await renderMd(index)
+                count++
             }
-
-            await renderMd(index)
-            count++
+        } catch (e) {
+            await renderError(e)
+        } finally {
+            generating = false
         }
-        generating = false
     }
+}
+
+const renderError = async (e: any) => {
+    // resetConversation
 }
 
 const enter = (e: KeyboardEvent) => {
@@ -113,7 +124,7 @@ const enter = (e: KeyboardEvent) => {
 }
 </script>
 
-<div class="gemini-chat">
+<div class="gemini-chat" bind:this={container}>
     <div class="gemini-conversation">
         {#each history as conv}
             <div class="gemini-conv-item">
@@ -124,86 +135,29 @@ const enter = (e: KeyboardEvent) => {
                                 xmlns="http://www.w3.org/2000/svg"
                                 x="0px"
                                 y="0px"
-                                viewBox="0 0 48 48"
+                                width="12px"
+                                height="12px"
+                                viewBox="0 0 64 64"
                             >
-                                <polygon
-                                    fill="#5c6bc0"
-                                    points="9.464,21.643 14.964,9.071 28.321,3.155 37.5,11.736 34.25,37.185 31.096,45.118 17.321,42.071"
-                                ></polygon><polygon
-                                    fill="#e8eaf6"
-                                    points="38.536,12.214 28.321,7.5 28.321,2"
-                                ></polygon><polygon
-                                    fill="#c5cae9"
-                                    points="28.321,7.5 19.679,16.143 31.443,46 35.393,37.357 38.536,12.214"
-                                ></polygon><polygon
-                                    fill="#9fa8da"
-                                    points="28.321,7.5 19.679,16.143 14.964,9.071 28.321,2"
-                                ></polygon><polygon
-                                    fill="#7986cb"
-                                    points="17.321,42.071 19.679,16.143 31.443,46"
-                                ></polygon>
+                                <path
+                                    d="M50.707,16.293l-13-13c-0.312-0.311-0.788-0.382-1.175-0.177l-17,9c-0.2,0.105-0.357,0.276-0.448,0.483l-7,16	c-0.105,0.24-0.111,0.514-0.018,0.76l10,26c0.114,0.295,0.36,0.52,0.666,0.604l17.974,5C40.795,60.988,40.885,61,40.974,61	c0.384,0,0.743-0.222,0.909-0.584l5.026-11c0.043-0.093,0.07-0.191,0.083-0.292l4-32C51.03,16.817,50.926,16.511,50.707,16.293z M39.307,58.498L24.071,54.26l2.543-27.973L39.307,58.498z M26.155,20.431l-4.709-7.064l0,0L36,5.661v4.925L26.155,20.431z M38,6.414l7.328,7.328L38,10.36V6.414z M14.081,29.024l6.102-13.947l4.789,7.184l-2.579,28.374L14.081,29.024z M45.026,48.724	l-3.985,8.721l-13.87-35.202L37.214,12.2l11.703,5.401l0,0L45.026,48.724z"
+                                ></path>
                             </svg>
                         {:else}
                             <svg
+                                width="12px"
+                                height="12px"
+                                viewBox="0 0 24 24"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 1080 1080"
-                                ><path
-                                    d="M515.09 725.824l-43.084 98.679c-16.562 37.931-69.052 37.931-85.613 0l-43.085-98.679c-38.342-87.818-107.355-157.72-193.44-195.932l-118.59-52.641c-37.704-16.736-37.704-71.586 0-88.322l114.886-50.997c88.299-39.195 158.55-111.688 196.237-202.501l43.643-105.162c16.195-39.025 70.115-39.025 86.311 0l43.643 105.163c37.687 90.812 107.937 163.305 196.236 202.5l114.887 50.997c37.704 16.736 37.704 71.586 0 88.322L708.53 529.892c-86.084 38.212-155.097 108.114-193.44 195.932z"
-                                    fill="url(#prefix__paint0_radial_2525_777)"
-                                /><path
-                                    d="M915.485 1036.98l-12.118 27.77c-8.868 20.33-37.018 20.33-45.886 0l-12.117-27.77c-21.599-49.515-60.502-88.938-109.046-110.505l-37.331-16.586c-20.185-8.968-20.185-38.311 0-47.279l35.244-15.659c49.792-22.122 89.392-63.004 110.62-114.201l12.443-30.009c8.672-20.915 37.588-20.915 46.26 0l12.443 30.009c21.228 51.197 60.829 92.079 110.623 114.201l35.24 15.659c20.19 8.968 20.19 38.311 0 47.279l-37.33 16.586c-48.543 21.567-87.447 60.99-109.045 110.505z"
-                                    fill="url(#prefix__paint1_radial_2525_777)"
-                                /><defs
-                                    ><radialGradient
-                                        id="prefix__paint0_radial_2525_777"
-                                        cx="0"
-                                        cy="0"
-                                        r="1"
-                                        gradientUnits="userSpaceOnUse"
-                                        gradientTransform="rotate(78.858 46.989 644.69) scale(665.5 665.824)"
-                                        ><stop stop-color="#1BA1E3" /><stop
-                                            offset="0"
-                                            stop-color="#1BA1E3"
-                                        /><stop
-                                            offset=".3"
-                                            stop-color="#5489D6"
-                                        /><stop
-                                            offset=".546"
-                                            stop-color="#9B72CB"
-                                        /><stop
-                                            offset=".825"
-                                            stop-color="#D96570"
-                                        /><stop
-                                            offset="1"
-                                            stop-color="#F49C46"
-                                        /></radialGradient
-                                    ><radialGradient
-                                        id="prefix__paint1_radial_2525_777"
-                                        cx="0"
-                                        cy="0"
-                                        r="1"
-                                        gradientUnits="userSpaceOnUse"
-                                        gradientTransform="rotate(78.858 46.989 644.69) scale(665.5 665.824)"
-                                        ><stop stop-color="#1BA1E3" /><stop
-                                            offset="0"
-                                            stop-color="#1BA1E3"
-                                        /><stop
-                                            offset=".3"
-                                            stop-color="#5489D6"
-                                        /><stop
-                                            offset=".546"
-                                            stop-color="#9B72CB"
-                                        /><stop
-                                            offset=".825"
-                                            stop-color="#D96570"
-                                        /><stop
-                                            offset="1"
-                                            stop-color="#F49C46"
-                                        /></radialGradient
-                                    ></defs
-                                ></svg
                             >
+                                <path
+                                    d="M8.03339 3.65784C8.37932 2.78072 9.62068 2.78072 9.96661 3.65785L11.0386 6.37599C11.1442 6.64378 11.3562 6.85576 11.624 6.96137L14.3422 8.03339C15.2193 8.37932 15.2193 9.62068 14.3422 9.96661L11.624 11.0386C11.3562 11.1442 11.1442 11.3562 11.0386 11.624L9.96661 14.3422C9.62067 15.2193 8.37932 15.2193 8.03339 14.3422L6.96137 11.624C6.85575 11.3562 6.64378 11.1442 6.37599 11.0386L3.65784 9.96661C2.78072 9.62067 2.78072 8.37932 3.65785 8.03339L6.37599 6.96137C6.64378 6.85575 6.85576 6.64378 6.96137 6.37599L8.03339 3.65784Z"
+                                />
+                                <path
+                                    d="M16.4885 13.3481C16.6715 12.884 17.3285 12.884 17.5115 13.3481L18.3121 15.3781C18.368 15.5198 18.4802 15.632 18.6219 15.6879L20.6519 16.4885C21.116 16.6715 21.116 17.3285 20.6519 17.5115L18.6219 18.3121C18.4802 18.368 18.368 18.4802 18.3121 18.6219L17.5115 20.6519C17.3285 21.116 16.6715 21.116 16.4885 20.6519L15.6879 18.6219C15.632 18.4802 15.5198 18.368 15.3781 18.3121L13.3481 17.5115C12.884 17.3285 12.884 16.6715 13.3481 16.4885L15.3781 15.6879C15.5198 15.632 15.632 15.5198 15.6879 15.3781L16.4885 13.3481Z"
+                                />
+                            </svg>
                         {/if}
                     </div>
                     <div class="gemini-conv-content">
@@ -333,6 +287,8 @@ const enter = (e: KeyboardEvent) => {
 .gemini-conv-icon svg {
     width: 100%;
     height: 100%;
+    stroke: var(--color-purple);
+    stroke-width: 2px;
 }
 
 .gemini-conv-line {
