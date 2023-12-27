@@ -3,9 +3,6 @@ import type GeminiService from 'GeminiService'
 import type { Prompt } from 'Settings'
 import GeminiIcon from './GeminiIcon.svelte'
 
-//32720
-//12288
-
 export let option: Prompt
 export let gemini: GeminiService
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 import { tick, onMount } from 'svelte'
-import type { GeminiChat } from 'GeminiService'
 import { MarkdownRenderer, type ItemView, type App } from 'obsidian'
 import GeminiIcon from './GeminiIcon.svelte'
 import { nanoid } from 'nanoid'
