@@ -16,56 +16,7 @@ const token = gemini.countToken(prompt)
 <div class="gemini-option">
     <span>
         <span>
-            <svg
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 1080 1080"
-				width="12px"
-				height="12px"
-                ><path
-                    d="M515.09 725.824l-43.084 98.679c-16.562 37.931-69.052 37.931-85.613 0l-43.085-98.679c-38.342-87.818-107.355-157.72-193.44-195.932l-118.59-52.641c-37.704-16.736-37.704-71.586 0-88.322l114.886-50.997c88.299-39.195 158.55-111.688 196.237-202.501l43.643-105.162c16.195-39.025 70.115-39.025 86.311 0l43.643 105.163c37.687 90.812 107.937 163.305 196.236 202.5l114.887 50.997c37.704 16.736 37.704 71.586 0 88.322L708.53 529.892c-86.084 38.212-155.097 108.114-193.44 195.932z"
-                    fill="url(#prefix__paint0_radial_2525_777)"
-                /><path
-                    d="M915.485 1036.98l-12.118 27.77c-8.868 20.33-37.018 20.33-45.886 0l-12.117-27.77c-21.599-49.515-60.502-88.938-109.046-110.505l-37.331-16.586c-20.185-8.968-20.185-38.311 0-47.279l35.244-15.659c49.792-22.122 89.392-63.004 110.62-114.201l12.443-30.009c8.672-20.915 37.588-20.915 46.26 0l12.443 30.009c21.228 51.197 60.829 92.079 110.623 114.201l35.24 15.659c20.19 8.968 20.19 38.311 0 47.279l-37.33 16.586c-48.543 21.567-87.447 60.99-109.045 110.505z"
-                    fill="url(#prefix__paint1_radial_2525_777)"
-                /><defs
-                    ><radialGradient
-                        id="prefix__paint0_radial_2525_777"
-                        cx="0"
-                        cy="0"
-                        r="1"
-                        gradientUnits="userSpaceOnUse"
-                        gradientTransform="rotate(78.858 46.989 644.69) scale(665.5 665.824)"
-                        ><stop stop-color="#1BA1E3" /><stop
-                            offset="0"
-                            stop-color="#1BA1E3"
-                        /><stop offset=".3" stop-color="#5489D6" /><stop
-                            offset=".546"
-                            stop-color="#9B72CB"
-                        /><stop offset=".825" stop-color="#D96570" /><stop
-                            offset="1"
-                            stop-color="#F49C46"
-                        /></radialGradient
-                    ><radialGradient
-                        id="prefix__paint1_radial_2525_777"
-                        cx="0"
-                        cy="0"
-                        r="1"
-                        gradientUnits="userSpaceOnUse"
-                        gradientTransform="rotate(78.858 46.989 644.69) scale(665.5 665.824)"
-                        ><stop stop-color="#1BA1E3" /><stop
-                            offset="0"
-                            stop-color="#1BA1E3"
-                        /><stop offset=".3" stop-color="#5489D6" /><stop
-                            offset=".546"
-                            stop-color="#9B72CB"
-                        /><stop offset=".825" stop-color="#D96570" /><stop
-                            offset="1"
-                            stop-color="#F49C46"
-                        /></radialGradient
-                    ></defs
-                ></svg
-            >
+            <GeminiIcon width="12px" height="12px" />
         </span>
         {option.display}
     </span>
@@ -89,10 +40,7 @@ const token = gemini.countToken(prompt)
     display: flex;
     justify-content: space-between;
 }
-.gemini-option svg {
-    stroke: var(--text-normal);
-    stroke-width: 2px;
-}
+
 .token-normal {
     font-size: 0.6rem;
     color: var(--text-muted);

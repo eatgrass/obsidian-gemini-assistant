@@ -144,7 +144,7 @@ const enter = (e: KeyboardEvent) => {
                                 ></path>
                             </svg>
                         {:else}
-                            <GeminiIcon width="" height="" />
+                            <GeminiIcon width={null} height={null} />
                         {/if}
                     </div>
                     <div class="gemini-conv-content">

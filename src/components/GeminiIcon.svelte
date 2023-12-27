@@ -1,7 +1,7 @@
 <script lang="ts">
 import { nanoid } from 'nanoid'
-export let width: string
-export let height: string
+export let width: string | null
+export let height: string | null
 const id = nanoid()
 </script>
 
