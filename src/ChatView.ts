@@ -12,6 +12,10 @@ export class ChatView extends ItemView {
         super(leaf)
         this.plugin = plugin
         this.icon = 'message-circle'
+        this.navigation = false
+        this.addAction('x-square', 'Clear', () => {
+            this.component?.clear()
+        })
     }
 
     getViewType(): string {
@@ -27,7 +31,7 @@ export class ChatView extends ItemView {
         this.component = new ChatComponent({
             target: this.contentEl,
             props: {
-                gemini: this.plugin.gemini?.gemini.startChat(),
+                gemini: this.plugin.gemini?.gemini,
                 view: this,
                 app: this.plugin.app,
             },

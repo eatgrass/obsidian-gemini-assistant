@@ -4,10 +4,21 @@ import type { GeminiChat } from 'GeminiService'
 import { MarkdownRenderer, type ItemView, type App } from 'obsidian'
 import GeminiIcon from './GeminiIcon.svelte'
 import { nanoid } from 'nanoid'
+import type Gemini from 'GeminiService'
 
-export let gemini: GeminiChat
+export let gemini: Gemini
 export let view: ItemView
 export let app: App
+let container: HTMLElement
+let history: Message[] = []
+
+let chat = gemini.startChat('gemini-pro')
+
+export const clear = () => {
+    chat = gemini.startChat('gemini-pro')
+    container?.firstElementChild?.empty()
+    history = []
+}
 
 let textarea: HTMLTextAreaElement
 
@@ -22,10 +33,6 @@ onMount(() => {
         textarea?.focus()
     }, 1000)
 })
-
-let container: HTMLElement
-
-let history: Message[] = []
 
 let generating: boolean = false
 
@@ -98,7 +105,7 @@ const send = async () => {
         await addLoading(index)
 
         try {
-            const result = await gemini.send(msg)
+            const result = await chat.send(msg)
             let count = 0
 
             for await (const chunk of result.stream) {
