@@ -13,6 +13,7 @@ let textarea: HTMLTextAreaElement
 type Message = {
     role: string
     parts: string
+    error?: string
 }
 
 onMount(() => {
@@ -47,9 +48,12 @@ const addUserMsg = async (msg: string) => {
 }
 
 const renderMd = async (index: number) => {
+    await tick()
     const els = container.getElementsByClassName('gemini-conv-text')
     if (els.length > 0) {
+        console.log(history[index].parts)
         const el = els.item(index) as HTMLElement
+        console.log(el)
         if (el) {
             el.empty()
             await MarkdownRenderer.render(
@@ -79,37 +83,98 @@ const send = async () => {
         const msg = textarea.value
         textarea.value = ''
         await addUserMsg(msg)
+
+        let index = history.length
+
+        history = [
+            ...history,
+            {
+                role: 'model',
+                parts: '',
+            },
+        ]
+
+        await addLoading(index)
+
         try {
             const result = await gemini.send(msg)
             let count = 0
-            let index = history.length
 
             for await (const chunk of result.stream) {
                 if (count == 0) {
-                    history = [
-                        ...history,
-                        {
-                            role: 'model',
-                            parts: chunk.text(),
-                        },
-                    ]
+                    history[index].parts = chunk.text()
                 } else {
                     history[index].parts += chunk.text()
                 }
 
-                await tick()
                 await renderMd(index)
                 count++
             }
         } catch (e) {
-            await renderError(e)
+            await renderError(index, e)
         } finally {
             generating = false
+            removeLoading(index)
         }
     }
 }
 
-const renderError = async (e: any) => {
+const addLoading = async (i: number) => {
+    await tick()
+    const els = container.getElementsByClassName('gemini-conv-name')
+    if (els.length > 0) {
+        const el = els.item(i) as HTMLElement
+        if (el) {
+            const div = document.createElement('span')
+            div.addClass('gemini-ripple')
+            el.append(div)
+        }
+    }
+}
+
+const removeLoading = (i: number) => {
+    const els = container.getElementsByClassName('gemini-conv-name')
+    if (els.length > 0) {
+        const el = els.item(i) as HTMLElement
+        if (el) {
+            el.firstElementChild?.remove()
+        }
+    }
+}
+
+const renderError = async (i: number, e: any) => {
+    if (!history[i]) {
+        history = [
+            ...history,
+            {
+                role: 'model',
+                parts: '',
+                error: e.toString(),
+            },
+        ]
+    } else {
+        history[i].error = e.toString()
+    }
+
+    await tick()
+
+    const els = container.getElementsByClassName('gemini-conv-text')
+    if (els.length > 0) {
+        const el = els.item(i) as HTMLElement
+        if (el) {
+            el.empty()
+            const div = document.createElement('div')
+            div.setText(history[i].error || '')
+            div.addClass('gemini-err-message')
+            el.append(div)
+            el.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest',
+            })
+        }
+    }
+
     // resetConversation
 }
 
