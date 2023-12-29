@@ -78,23 +78,34 @@ export class GeminiExtension {
             changes: [
                 {
                     from: line.to,
-                    // insert callout block
+                    // insert a callout block
                     insert: '\n\n>[!gemini] Gemini\n> ',
                 },
             ],
             effects: [addGemini.of({ from: line.to, to: line.to, prompt, id })],
         })
 
-        const result = await this._generate(option)
-        let prevChunk = null
-        for await (const chunk of result.stream) {
-            if (prevChunk !== null) {
-                this.processChunk(view, id, prevChunk.text(), false)
+        try {
+            const result = await this._generate(option)
+            let prevChunk = null
+            for await (const chunk of result.stream) {
+                if (prevChunk !== null) {
+                    this.processChunk(view, id, prevChunk.text(), false)
+                }
+                prevChunk = chunk
             }
-            prevChunk = chunk
-        }
-        if (prevChunk !== null) {
-            this.processChunk(view, id, prevChunk.text(), true)
+            if (prevChunk !== null) {
+                this.processChunk(view, id, prevChunk.text(), true)
+            }
+        } catch (e: any) {
+            this.processChunk(
+                view,
+                id,
+                `<span style="color: var(--text-error)">${
+                    e?.toString() || 'Unknown Error'
+                }</span>`,
+                true,
+            )
         }
     }
 
