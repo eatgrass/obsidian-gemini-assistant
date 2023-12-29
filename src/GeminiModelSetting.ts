@@ -1,53 +1,47 @@
-import { DEFAULT_GEMINI_CONFIGS, PromptType, type Prompt } from 'Settings'
+import { Scope, type GeminiPrompt, type GeminiChat } from 'Settings'
 import GeminiAssistantPlugin from 'main'
 import { Modal, Setting } from 'obsidian'
 
-export default class CustomPrompt extends Modal {
-    private prompt: Prompt
-    private plugin: GeminiAssistantPlugin
-    private index?: number
+export default class GeminiModelSetting extends Modal {
+    private prompt: GeminiPrompt | GeminiChat
+    private callback: (prompt: GeminiPrompt | GeminiChat) => void
 
-    constructor(plugin: GeminiAssistantPlugin, index?: number) {
+    constructor(
+        plugin: GeminiAssistantPlugin,
+        prompt: GeminiPrompt | GeminiChat,
+        callback: (prompt: GeminiPrompt | GeminiChat) => void,
+    ) {
         super(plugin.app)
-        this.plugin = plugin
-        this.index = index
-        this.prompt =
-            index !== undefined
-                ? plugin.getSettings().prompts[index]
-                : {
-                      display: 'Custom prompt',
-                      type: PromptType.SELECTION,
-                      model: 'gemini-pro',
-                      config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
-                      prompt: '',
-                  }
-
-        if (this.prompt) {
-            this.titleEl.setText(this.prompt.display)
-        }
+        this.prompt = { ...prompt }
+        this.callback = callback
     }
 
     async onOpen() {
         this.contentEl.empty()
-        this.titleEl.setText(this.prompt.display)
 
-        new Setting(this.contentEl).setName('Name').addText((text) => {
-            text.setValue(this.prompt?.display || '')
-            text.inputEl.style.width = '400px'
-            text.onChange((text) => {
-                this.prompt.display = text
-                this.titleEl.setText(text)
-            })
-        })
+        this.titleEl.setText('Model Setting')
 
-        new Setting(this.contentEl).setName('Scope').addDropdown((dropdown) => {
-            dropdown.addOption(PromptType.SELECTION, 'Selection')
-            dropdown.addOption(PromptType.DOCUMENT, 'Document')
-            dropdown.setValue(this.prompt.type)
-            dropdown.onChange((value) => {
-                this.prompt.type = value as PromptType
+        if (this.prompt.type == 'generative') {
+            let p = this.prompt as GeminiPrompt
+            new Setting(this.contentEl).setName('Name').addText((text) => {
+                text.setValue(p.display || '')
+                text.inputEl.style.width = '400px'
+                text.onChange((text) => {
+                    p.display = text
+                })
             })
-        })
+
+            new Setting(this.contentEl)
+                .setName('Scope')
+                .addDropdown((dropdown) => {
+                    dropdown.addOption(Scope.SELECTION, 'Selection')
+                    dropdown.addOption(Scope.DOCUMENT, 'Document')
+                    dropdown.setValue(p.scope)
+                    dropdown.onChange((value) => {
+                        p.scope = value as Scope
+                    })
+                })
+        }
 
         new Setting(this.contentEl)
             .setName('Max output tokens')
@@ -113,13 +107,15 @@ export default class CustomPrompt extends Modal {
                 button.buttonEl.style.backgroundColor =
                     'var(--interactive-accent)'
                 button.onClick(() => {
-                    const prompts = this.plugin.getSettings().prompts
-                    if (this.index !== undefined) {
-                        prompts[this.index] = this.prompt
-                    } else {
-                        prompts.push(this.prompt)
-                    }
-                    this.plugin.updateSettings({ prompts }, true)
+                    // const prompts = this.plugin.getSettings().prompts
+
+                    this.callback(this.prompt)
+                    // if (this.index !== undefined) {
+                    //     prompts[this.index] = this.prompt
+                    // } else {
+                    //     prompts.push(this.prompt)
+                    // }
+                    // this.plugin.updateSettings({ prompts }, true)
                     this.close()
                 })
             })

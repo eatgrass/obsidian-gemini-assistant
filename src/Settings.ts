@@ -1,19 +1,23 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 import GeminiAssistantPlugin from 'main'
 import { type Model } from 'GeminiService'
-import CustomPrompt from 'CustomPrompt'
+import GeminiModelSetting from 'GeminiModelSetting'
 
-export enum PromptType {
+export enum Scope {
     DOCUMENT = 'DOCUMENT',
     SELECTION = 'SELECTION',
 }
 
-export type Prompt = {
+export interface GeminiPrompt extends GeminiChat {
     display: string
-    type: PromptType
+    scope: Scope
+}
+
+export interface GeminiChat {
     config: GeminiConfig
     model: Model
     prompt: string | any[]
+    type: 'chat' | 'generative'
 }
 
 export type GeminiConfig = {
@@ -29,7 +33,8 @@ export type GeminiConfig = {
 export interface Settings {
     apiKey: string
     model: Model
-    prompts: Prompt[]
+    prompts: GeminiPrompt[]
+    chat: GeminiChat
 }
 
 export const DEFAULT_GEMINI_CONFIGS: Record<Model, GeminiConfig> = {
@@ -57,19 +62,27 @@ export const DEFAULT_SETTINGS: Settings = {
     prompts: [
         {
             display: 'Ask Gemini (Selection)',
-            type: PromptType.SELECTION,
+            scope: Scope.SELECTION,
             model: 'gemini-pro',
             config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
             prompt: '',
+            type: 'generative',
         },
         {
             display: 'Ask Gemini (Document)',
-            type: PromptType.DOCUMENT,
+            scope: Scope.DOCUMENT,
             model: 'gemini-pro',
             config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
             prompt: '',
+            type: 'generative',
         },
     ],
+    chat: {
+        model: 'gemini-pro',
+        config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
+        prompt: '',
+        type: 'chat',
+    },
 }
 
 export default class GeminiSettings extends PluginSettingTab {
@@ -102,24 +115,70 @@ export default class GeminiSettings extends PluginSettingTab {
             text.onChange((apiKey) => {
                 this.updateSettings({ apiKey })
             })
+            // TODO add test button
         })
 
-        new Setting(containerEl).setName('Prompts').addExtraButton((button) => {
-            button.setIcon('plus')
-            button.setTooltip('Add prompt')
-            button.onClick(() => {
-                new CustomPrompt(this.plugin).open()
+        new Setting(containerEl)
+            .setName('Chat setting')
+            .addExtraButton((button) => {
+                button.setIcon('settings')
+                button.setTooltip('Edit')
+                button.onClick(() => {
+                    new GeminiModelSetting(
+                        this.plugin,
+                        this.settings.chat,
+                        (updated) => {
+                            this.updateSettings({ chat: updated }, true)
+                        },
+                    ).open()
+                })
             })
-        })
+
+        new Setting(containerEl)
+            .setHeading()
+            .setName('Prompts')
+            .addExtraButton((button) => {
+                button.setIcon('plus')
+                button.setTooltip('Add prompt')
+                button.onClick(() => {
+                    let prompt: GeminiPrompt = {
+                        display: 'Custom prompt',
+                        scope: Scope.SELECTION,
+                        model: 'gemini-pro',
+                        config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
+                        prompt: '',
+                        type: 'generative',
+                    }
+                    new GeminiModelSetting(this.plugin, prompt, (n) => {
+                        this.updateSettings(
+                            {
+                                prompts: [
+                                    ...this.settings.prompts,
+                                    n as GeminiPrompt,
+                                ],
+                            },
+                            true,
+                        )
+                    }).open()
+                })
+            })
 
         for (let i = 0; i < this.settings.prompts.length; i++) {
             new Setting(containerEl)
                 .setName(this.settings.prompts[i].display)
                 .addExtraButton((button) => {
-                    button.setIcon('edit')
+                    button.setIcon('settings')
                     button.setTooltip('Edit')
                     button.onClick(() => {
-                        new CustomPrompt(this.plugin, i).open()
+                        new GeminiModelSetting(
+                            this.plugin,
+                            this.settings.prompts[i],
+                            (updated) => {
+                                let prompts = [...this.settings.prompts]
+                                prompts[i] = updated as GeminiPrompt
+                                this.plugin.updateSettings({ prompts }, true)
+                            },
+                        ).open()
                     })
                 })
                 .addExtraButton((button) => {

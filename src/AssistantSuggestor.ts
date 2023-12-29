@@ -3,9 +3,10 @@ import { Editor, MarkdownView, SuggestModal } from 'obsidian'
 import { EditorView } from '@codemirror/view'
 import { GeminiExtension } from 'GeminiExtension'
 import SuggestionComponent from './components/SuggestionComponent.svelte'
-import { PromptType, type Prompt as PromptOption } from 'Settings'
+import { Scope, type GeminiPrompt } from 'Settings'
+import type Gemini from 'GeminiService'
 
-export default class AssistantSuggestor extends SuggestModal<PromptOption> {
+export default class AssistantSuggestor extends SuggestModal<GeminiPrompt> {
     private editor: Editor
 
     private query: any = ''
@@ -31,7 +32,7 @@ export default class AssistantSuggestor extends SuggestModal<PromptOption> {
         this.open()
     }
 
-    getSuggestions(query: string): PromptOption[] | Promise<PromptOption[]> {
+    getSuggestions(query: string): GeminiPrompt[] | Promise<GeminiPrompt[]> {
         this.query = query
 
         return this.plugin.getSettings().prompts.map((option) => {
@@ -43,7 +44,7 @@ export default class AssistantSuggestor extends SuggestModal<PromptOption> {
         })
     }
 
-    renderSuggestion(option: PromptOption, el: HTMLElement) {
+    renderSuggestion(option: GeminiPrompt, el: HTMLElement) {
         new SuggestionComponent({
             target: el,
             props: {
@@ -54,14 +55,14 @@ export default class AssistantSuggestor extends SuggestModal<PromptOption> {
     }
 
     async onChooseSuggestion(
-        option: PromptOption,
+        option: GeminiPrompt,
         evt: MouseEvent | KeyboardEvent,
     ) {
         this.gemini?.generate(this.view, option)
         this.query = ''
     }
 
-    private getPrompt(option: PromptOption) {
+    private getPrompt(option: GeminiPrompt) {
         const prompt = []
         if (this.query) {
             prompt.push(this.query)
@@ -70,14 +71,14 @@ export default class AssistantSuggestor extends SuggestModal<PromptOption> {
             prompt.push(option.prompt)
         }
 
-        if (option.type == PromptType.DOCUMENT) {
+        if (option.scope == Scope.DOCUMENT) {
             const doc = this.editor.getValue()
             if (doc) {
                 prompt.push(doc)
             }
         }
 
-        if (option.type == PromptType.SELECTION) {
+        if (option.scope == Scope.SELECTION) {
             const selection = this.editor.getSelection()
             if (selection) {
                 prompt.push(selection)

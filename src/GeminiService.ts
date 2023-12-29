@@ -1,6 +1,6 @@
 import GeminiAssistantPlugin from 'main'
 import { GoogleGenerativeAI } from 'generative-ai.mjs'
-import type { Prompt } from 'Settings'
+import type { GeminiPrompt } from 'Settings'
 
 export type Model = 'gemini-pro' | 'gemini-pro-vision'
 
@@ -22,7 +22,7 @@ export default class Gemini {
         )
     }
 
-    public async generate(option: Prompt) {
+    public async generate(option: GeminiPrompt) {
         if (!option.prompt || option.prompt.length == 0) {
             return
         }

@@ -3,7 +3,7 @@ import { EditorView, Decoration, type DecorationSet } from '@codemirror/view'
 import Gemini from 'GeminiService'
 import { nanoid } from 'nanoid'
 import GeminiAssistantPlugin from 'main'
-import type { Prompt } from 'Settings'
+import type { GeminiPrompt } from 'Settings'
 
 const createStateFiled = () => {
     const f: StateField<DecorationSet> = StateField.define<DecorationSet>({
@@ -64,7 +64,7 @@ export class GeminiExtension {
         this.field = createStateFiled()
     }
 
-    public async generate(view: EditorView, option: Prompt) {
+    public async generate(view: EditorView, option: GeminiPrompt) {
         if (option.prompt.length == 0) {
             return
         }
@@ -154,7 +154,7 @@ export class GeminiExtension {
         return to
     }
 
-    private async _generate(option: Prompt) {
+    private async _generate(option: GeminiPrompt) {
         const result = await this.gemini.generate(option)
         return result ? (result as any) : { stream: [] }
     }
