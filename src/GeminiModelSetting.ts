@@ -86,14 +86,17 @@ export default class GeminiModelSetting extends Modal {
             })
         })
 
-        new Setting(this.contentEl).setName('Prompt').addTextArea((text) => {
-            text.setValue(this.prompt.prompt as string)
-            text.inputEl.style.width = '400px'
-            text.inputEl.style.resize = 'none'
-            text.onChange((text) => {
-                this.prompt.prompt = text
-            })
-        })
+        if (this.prompt.type == 'generative') {
+            let p = this.prompt as GeminiPrompt
+			new Setting(this.contentEl).setName('Prompt').addTextArea((text) => {
+				text.setValue(p.prompt as string)
+				text.inputEl.style.width = '400px'
+				text.inputEl.style.resize = 'none'
+				text.onChange((text) => {
+					p.prompt = text
+				})
+			})
+		}
 
         new Setting(this.contentEl)
             .addButton((button) => {

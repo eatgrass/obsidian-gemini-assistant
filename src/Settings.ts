@@ -11,12 +11,12 @@ export enum Scope {
 export interface GeminiPrompt extends GeminiChat {
     display: string
     scope: Scope
+    prompt: string | any[]
 }
 
 export interface GeminiChat {
     config: GeminiConfig
     model: Model
-    prompt: string | any[]
     type: 'chat' | 'generative'
 }
 
@@ -80,7 +80,6 @@ export const DEFAULT_SETTINGS: Settings = {
     chat: {
         model: 'gemini-pro',
         config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
-        prompt: '',
         type: 'chat',
     },
 }
