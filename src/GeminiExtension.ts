@@ -69,7 +69,7 @@ export class GeminiExtension {
             return
         }
 
-        let cursor = view.state.selection.main.anchor
+        let cursor = view.state.selection.main.to
         let line = view.state.doc.lineAt(cursor)
         let id = nanoid()
 
@@ -79,7 +79,7 @@ export class GeminiExtension {
                 {
                     from: line.to,
                     // insert a callout block
-                    insert: '\n\n>[!gemini] Gemini\n> ',
+                    insert: '\n\n>[!gemini]+ Gemini\n> ',
                 },
             ],
             effects: [addGemini.of({ from: line.to, to: line.to, prompt, id })],
