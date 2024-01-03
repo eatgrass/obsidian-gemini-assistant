@@ -25,13 +25,21 @@ export default class PromoptModal extends Modal {
         value?: string,
     ) {
         const textComponent = new TextComponent(container)
-
-        textComponent.inputEl.style.width = '100%'
+        textComponent.inputEl.addClass('gemini-input')
         textComponent
             .setPlaceholder(placeholder ?? '')
             .setValue(value ?? '')
             .onChange((value) => (this.input = value))
-            .inputEl.addEventListener('keydown', () => {})
+            .inputEl.addEventListener('keydown', (e: KeyboardEvent) => {
+                if (e.key == 'Enter') {
+                    this.runChat(this.input)
+                    this.close()
+                }
+
+                if (e.key == 'Esc') {
+                    this.close()
+                }
+            })
 
         return textComponent
     }
@@ -61,19 +69,16 @@ export default class PromoptModal extends Modal {
     private createButtonBar(mainContentContainer: HTMLDivElement) {
         const buttonBarContainer: HTMLDivElement =
             mainContentContainer.createDiv()
+        buttonBarContainer.addClass('gemini-button-bar')
         this.createButton(buttonBarContainer, 'Send', () => {
             this.runChat(this.input)
             this.close()
-        }).setCta().buttonEl.style.marginRight = '0'
+        })
+            .setCta()
+            .buttonEl.addClass('gemini-button')
         this.createButton(buttonBarContainer, 'Cancel', () => {
             this.close()
         })
-
-        buttonBarContainer.style.display = 'flex'
-        buttonBarContainer.style.flexDirection = 'row-reverse'
-        buttonBarContainer.style.justifyContent = 'flex-start'
-        buttonBarContainer.style.marginTop = '1rem'
-        buttonBarContainer.style.gap = '0.5rem'
     }
 
     async runChat(input: string) {
@@ -96,7 +101,6 @@ export default class PromoptModal extends Modal {
                 data.candidates[0].content.parts[0].text
                     .split(/r?\n/)
                     .forEach((line: string, i: number) => {
-                        console.log(line)
                         this.editor.setLine(count + i + 2, `> ${line}\n`)
                     })
             })

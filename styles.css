@@ -6,3 +6,19 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.gemini-button-bar {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+
+.gemini-input {
+    width: 100%;
+}
+
+.gemini-button {
+    margin-right: 0;
+}

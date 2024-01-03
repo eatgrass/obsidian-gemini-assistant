@@ -52,7 +52,6 @@ export default class GeminiAssistantPlugin extends Plugin {
                                     data.candidates[0].content.parts[0].text
                                         .split(/r?\n/)
                                         .forEach((line: string, i: number) => {
-                                            console.log(line)
                                             editor.setLine(
                                                 count + i + 2,
                                                 `> ${line}\n`,
