@@ -58,9 +58,7 @@ const renderMd = async (index: number) => {
     await tick()
     const els = container.getElementsByClassName('gemini-conv-text')
     if (els.length > 0) {
-        console.log(history[index].parts)
         const el = els.item(index) as HTMLElement
-        console.log(el)
         if (el) {
             el.empty()
             await MarkdownRenderer.render(
@@ -191,6 +189,7 @@ const enter = (e: KeyboardEvent) => {
             return
         } else {
             send()
+			textarea.style.height = `inherit`
             e.preventDefault()
         }
     }

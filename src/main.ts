@@ -12,6 +12,7 @@ import { type Extension } from '@codemirror/state'
 import { VIEW_TYPE_GEMINI_CHAT, ChatView } from 'ChatView'
 
 export default class GeminiAssistantPlugin extends Plugin {
+
     private cmExtension: Extension[] = []
 
     public gemini?: GeminiExtension
