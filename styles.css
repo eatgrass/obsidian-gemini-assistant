@@ -38,7 +38,7 @@ If your plugin does not need CSS, delete this file.
     height: 1rem;
     display: inline-block;
     position: relative;
-	margin-left: 10px;
+    margin-left: 10px;
 }
 .gemini-ripple::after,
 .gemini-ripple::before {
@@ -47,7 +47,7 @@ If your plugin does not need CSS, delete this file.
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 2px solid var(--color-blue);
     position: absolute;
     left: 0;
     top: 3px;
