@@ -1,72 +1,108 @@
 import GeminiChatSettings, { DEFAULT_SETTINGS, type Settings } from 'Settings'
-import { Plugin, Editor } from 'obsidian'
-import PromptModal from 'PromptModal'
-import { ChatSession } from 'GeminiChat'
+import {
+    Plugin,
+    Editor,
+    MarkdownView,
+    type MarkdownFileInfo,
+    WorkspaceLeaf,
+} from 'obsidian'
+import AssistantSuggestor from 'AssistantSuggestor'
+import { GeminiExtension } from 'GeminiExtension'
+import { type Extension } from '@codemirror/state'
+import { VIEW_TYPE_GEMINI_CHAT, ChatView } from 'ChatView'
 
 export default class GeminiAssistantPlugin extends Plugin {
+    private cmExtension: Extension[] = []
+
+    public gemini?: GeminiExtension
+
     private settings?: GeminiChatSettings
 
     public getSettings(): Settings {
         return this.settings?.getSettings() || DEFAULT_SETTINGS
     }
 
+    public async updateSettings(
+        newSettings: Partial<Settings>,
+        refresh: boolean = false,
+    ) {
+        await this.settings?.updateSettings(newSettings, refresh)
+    }
+
     async onload() {
         const settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) }
         this.settings = new GeminiChatSettings(this, settings)
         this.addSettingTab(this.settings)
-
+        this.cmExtension = []
+        this.registerEditorExtension(this.cmExtension)
+        this.updateEditorExtensions()
+        this.registerView(
+            VIEW_TYPE_GEMINI_CHAT,
+            (leaf) => new ChatView(this, leaf),
+        )
         this.addCommand({
-            id: 'gemini-chat',
-            name: 'Chat',
-            editorCallback: (editor: Editor) => {
-                new PromptModal(this, editor)
+            id: 'gemini-assistant',
+            name: 'Open assistant',
+            editorCallback: (
+                editor: Editor,
+                ctx: MarkdownView | MarkdownFileInfo,
+            ) => {
+                if (ctx instanceof MarkdownView) {
+                    new AssistantSuggestor(this, editor, ctx)
+                }
             },
         })
 
-        this.registerEvent(
-            this.app.workspace.on('editor-menu', (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item.setTitle('Chat selection')
-                        .setIcon('comment')
-                        .onClick(async () => {
-                            const content = editor.getSelection()
+        this.addRibbonIcon('message-circle', 'New Gemini chat', () => {
+            this.newChatView()
+        })
 
-                            if (!content) {
-                                return
-                            }
+        this.addCommand({
+            id: 'gemini-chat',
+            name: 'New Gemini chat',
+            callback: () => {
+                this.newChatView()
+            },
+        })
+    }
 
-                            const session = new ChatSession(this)
-                            const line = editor.lastLine()
+    async newChatView() {
+        let { workspace } = this.app
 
-                            const origin = editor.getLine(line)
-                            editor.setLine(
-                                line,
-                                `${origin}\n\n > Generating...`,
-                            )
-                            session
-                                .chat(content)
-                                .then((response) => response?.json())
-                                .then((data) => {
-                                    let count = line + 2
-                                    editor.setLine(count, `> **Gemini:** \n>\n`)
-                                    data.candidates[0].content.parts[0].text
-                                        .split(/r?\n/)
-                                        .forEach((line: string, i: number) => {
-                                            editor.setLine(
-                                                count + i + 2,
-                                                `> ${line}\n`,
-                                            )
-                                        })
-                                })
-                                .catch((error) => {
-                                    editor.setLine(
-                                        line + 2,
-                                        `>[!fail] ${error}`,
-                                    )
-                                })
-                        })
-                })
-            }),
-        )
+        let leaf = workspace.getLeaf()
+        await leaf.setViewState({
+            type: VIEW_TYPE_GEMINI_CHAT,
+            active: true,
+        })
+
+        workspace.revealLeaf(leaf)
+    }
+
+    async activateChatView() {
+        let { workspace } = this.app
+
+        let leaf: WorkspaceLeaf | null = null
+        let leaves = workspace.getLeavesOfType(VIEW_TYPE_GEMINI_CHAT)
+
+        if (leaves.length > 0) {
+            leaf = leaves[0]
+        } else {
+            leaf = workspace.getRightLeaf(false)
+            await leaf.setViewState({
+                type: VIEW_TYPE_GEMINI_CHAT,
+                active: true,
+            })
+        }
+
+        workspace.revealLeaf(leaf)
+    }
+    public updateEditorExtensions() {
+        this.gemini = new GeminiExtension(this)
+
+        // Don't create a new array, keep the same reference
+        this.cmExtension.length = 0
+        // editor extension for inline queries: enabled regardless of settings (enableInlineDataview/enableInlineDataviewJS)
+        this.cmExtension.push(this.gemini.getExtension())
+        this.app.workspace.updateOptions()
     }
 }
