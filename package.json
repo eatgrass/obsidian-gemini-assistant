@@ -1,6 +1,6 @@
 {
     "name": "obsidian-gemini-assistant",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "description": "Enhance the audio player with interacive lyrics for obsidian",
     "main": "main.js",
     "scripts": {
