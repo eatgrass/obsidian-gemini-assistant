@@ -8,11 +8,18 @@ export default class Gemini {
     private genAI: GoogleGenerativeAI
     private model: Model
     private plugin: GeminiAssistantPlugin
+    private apiKey: string
 
     constructor(plugin: GeminiAssistantPlugin, model?: Model) {
         this.model = model || plugin.getSettings().model
         this.plugin = plugin
-        this.genAI = new GoogleGenerativeAI(plugin.getSettings().apiKey)
+        this.apiKey = plugin.getSettings().apiKey
+        this.genAI = new GoogleGenerativeAI(this.apiKey)
+    }
+
+    public updateApiKey(key: string) {
+        this.apiKey = key
+        this.genAI = new GoogleGenerativeAI(this.apiKey)
     }
 
     public startChat(model?: Model): GeminiChat {

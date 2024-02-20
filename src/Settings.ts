@@ -113,8 +113,9 @@ export default class GeminiSettings extends PluginSettingTab {
             text.setValue(this.settings.apiKey)
             text.onChange((apiKey) => {
                 this.updateSettings({ apiKey })
+				this.plugin.updateApiKey(apiKey)
+
             })
-            // TODO add test button
         })
 
         new Setting(containerEl)

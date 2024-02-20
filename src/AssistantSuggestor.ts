@@ -71,14 +71,14 @@ export default class AssistantSuggestor extends SuggestModal<GeminiPrompt> {
             prompt.push(option.prompt)
         }
 
-        if (option.scope == Scope.DOCUMENT) {
+        if (option.scope== Scope.DOCUMENT) {
             const doc = this.editor.getValue()
             if (doc) {
                 prompt.push(doc)
             }
         }
 
-        if (option.scope == Scope.SELECTION) {
+        if (option.scope== Scope.SELECTION) {
             const selection = this.editor.getSelection()
             if (selection) {
                 prompt.push(selection)

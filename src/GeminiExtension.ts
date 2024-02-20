@@ -64,6 +64,11 @@ export class GeminiExtension {
         this.field = createStateFiled()
     }
 
+	public updateApiKey(key: string) {
+		this.gemini.updateApiKey(key)
+
+	}
+
     public async generate(view: EditorView, option: GeminiPrompt) {
         if (option.prompt.length == 0) {
             return

@@ -66,6 +66,10 @@ export default class GeminiAssistantPlugin extends Plugin {
         })
     }
 
+    public updateApiKey(key: string) {
+        this.gemini?.updateApiKey(key)
+    }
+
     async newChatView() {
         let { workspace } = this.app
 
