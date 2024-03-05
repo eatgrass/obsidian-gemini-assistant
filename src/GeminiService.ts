@@ -1,7 +1,7 @@
 import GeminiAssistantPlugin from 'main'
 import { GoogleGenerativeAI } from 'generative-ai.mjs'
-import type { GeminiPrompt } from 'Settings'
 
+import type { GeminiPrompt } from 'Settings'
 export type Model = 'gemini-pro' | 'gemini-pro-vision'
 
 export default class Gemini {
@@ -33,7 +33,9 @@ export default class Gemini {
         if (!option.prompt || option.prompt.length == 0) {
             return
         }
+
         const model = this.genAI.getGenerativeModel({ model: option.model })
+        const threshold = this.plugin.getSettings().saftyThreshold
 
         model.generationConfig = {
             stopSequences: option.config.stopSequences,
@@ -42,6 +44,30 @@ export default class Gemini {
             topP: option.config.topP,
             topK: option.config.topK,
         }
+
+        model.safetySettings = [
+            {
+                category: 'HARM_CATEGORY_HARASSMENT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_HATE_SPEECH',
+                threshold,
+            },
+        ]
+
+        // model.safetySettings = {
+        // 	(HarmCategory as any).HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+        // 	(HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+        // }
         return await model.generateContentStream(option.prompt)
     }
 
@@ -61,8 +87,30 @@ export class GeminiChat {
     private session
 
     constructor(plugin: GeminiAssistantPlugin, model: any) {
+        const threshold = plugin.getSettings().saftyThreshold
         this.model = model
-        this.session = this.model.startChat()
+        const safetySettings = [
+            {
+                category: 'HARM_CATEGORY_HARASSMENT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                threshold,
+            },
+            {
+                category: 'HARM_CATEGORY_HATE_SPEECH',
+                threshold,
+            },
+        ]
+        this.session = this.model.startChat({
+            history: [],
+            safetySettings,
+        })
     }
 
     public async send(msg: string) {

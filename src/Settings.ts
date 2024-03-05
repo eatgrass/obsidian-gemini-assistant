@@ -35,6 +35,7 @@ export interface Settings {
     model: Model
     prompts: GeminiPrompt[]
     chat: GeminiChat
+    saftyThreshold: string
 }
 
 export const DEFAULT_GEMINI_CONFIGS: Record<Model, GeminiConfig> = {
@@ -82,6 +83,7 @@ export const DEFAULT_SETTINGS: Settings = {
         config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
         type: 'chat',
     },
+    saftyThreshold: 'HARM_BLOCK_THRESHOLD_UNSPECIFIED',
 }
 
 export default class GeminiSettings extends PluginSettingTab {
@@ -109,17 +111,16 @@ export default class GeminiSettings extends PluginSettingTab {
         const { containerEl } = this
         containerEl.empty()
 
-        new Setting(containerEl).setName('API key').addText((text) => {
+        new Setting(containerEl).setName('API Key').addText((text) => {
             text.setValue(this.settings.apiKey)
             text.onChange((apiKey) => {
                 this.updateSettings({ apiKey })
-				this.plugin.updateApiKey(apiKey)
-
+                this.plugin.updateApiKey(apiKey)
             })
         })
 
         new Setting(containerEl)
-            .setName('Chat setting')
+            .setName('Chat Setting')
             .addExtraButton((button) => {
                 button.setIcon('settings')
                 button.setTooltip('Edit')
@@ -134,6 +135,25 @@ export default class GeminiSettings extends PluginSettingTab {
                 })
             })
 
+        new Setting(containerEl).setHeading().setName('Model')
+
+        new Setting(containerEl)
+            .setName('Harm Content Block Threshold')
+            .addDropdown((dropdown) => {
+                dropdown.addOptions({
+                    HARM_BLOCK_THRESHOLD_UNSPECIFIED: 'Default',
+                    BLOCK_LOW_AND_ABOVE: 'Low',
+                    BLOCK_MEDIUM_AND_ABOVE: 'Medium',
+                    BLOCK_ONLY_HIGH: 'High',
+                    BLOCK_NONE: 'None',
+                })
+                dropdown.setValue(this.settings.saftyThreshold)
+
+                dropdown.onChange((value) => {
+                    this.updateSettings({ saftyThreshold: value })
+                })
+            })
+
         new Setting(containerEl)
             .setHeading()
             .setName('Prompts')
@@ -142,7 +162,7 @@ export default class GeminiSettings extends PluginSettingTab {
                 button.setTooltip('Add prompt')
                 button.onClick(() => {
                     let prompt: GeminiPrompt = {
-                        display: 'Custom prompt',
+                        display: 'Custom Prompt',
                         scope: Scope.SELECTION,
                         model: 'gemini-pro',
                         config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
