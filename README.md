@@ -5,8 +5,8 @@ Your Gemini AI Powered Assistant
 ## Features
 
 - Content Generation
+- Gemini Chat
 
-🚧 Important Update: Ongoing Development 
 
 ## Usage
 
@@ -14,16 +14,11 @@ Your Gemini AI Powered Assistant
 
 you can get your Gemini API key at here [https://ai.google.dev/](https://ai.google.dev/)
 
-### **Generate with selection**
+### Commands
 
-![1](https://github.com/eatgrass/obsidian-gemini-assistant/assets/2351076/880ac866-f4fd-4c65-b15d-b0a37d967351)
+- `New Gemini Chat`
 
-
-### **Chat Command**
-
-Select `Gemini Assitant: Chat` to start
-
-![2](https://github.com/eatgrass/obsidian-gemini-assistant/assets/2351076/ec913fba-a761-4233-8260-ec112115bee0)
+- `Open Assistant`
 
 ---
 
