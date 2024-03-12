@@ -6,7 +6,7 @@ import {
     type MarkdownFileInfo,
     WorkspaceLeaf,
 } from 'obsidian'
-import AssistantSuggestor from 'AssistantSuggestor'
+import AssistantSuggester from 'AssistantSuggester'
 import { GeminiExtension } from 'GeminiExtension'
 import { type Extension } from '@codemirror/state'
 import { VIEW_TYPE_GEMINI_CHAT, ChatView } from 'ChatView'
@@ -48,7 +48,7 @@ export default class GeminiAssistantPlugin extends Plugin {
                 ctx: MarkdownView | MarkdownFileInfo,
             ) => {
                 if (ctx instanceof MarkdownView) {
-                    new AssistantSuggestor(this, editor, ctx)
+                    new AssistantSuggester(this, editor, ctx)
                 }
             },
         })

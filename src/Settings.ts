@@ -35,7 +35,7 @@ export interface Settings {
     model: Model
     prompts: GeminiPrompt[]
     chat: GeminiChat
-    saftyThreshold: string
+    safetyThreshold: string
 }
 
 export const DEFAULT_GEMINI_CONFIGS: Record<Model, GeminiConfig> = {
@@ -83,7 +83,7 @@ export const DEFAULT_SETTINGS: Settings = {
         config: DEFAULT_GEMINI_CONFIGS['gemini-pro'],
         type: 'chat',
     },
-    saftyThreshold: 'HARM_BLOCK_THRESHOLD_UNSPECIFIED',
+    safetyThreshold: 'HARM_BLOCK_THRESHOLD_UNSPECIFIED',
 }
 
 export default class GeminiSettings extends PluginSettingTab {
@@ -147,10 +147,10 @@ export default class GeminiSettings extends PluginSettingTab {
                     BLOCK_ONLY_HIGH: 'High',
                     BLOCK_NONE: 'None',
                 })
-                dropdown.setValue(this.settings.saftyThreshold)
+                dropdown.setValue(this.settings.safetyThreshold)
 
                 dropdown.onChange((value) => {
-                    this.updateSettings({ saftyThreshold: value })
+                    this.updateSettings({ safetyThreshold: value })
                 })
             })
 

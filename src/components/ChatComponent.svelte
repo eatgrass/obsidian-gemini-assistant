@@ -35,7 +35,7 @@ onMount(() => {
 
 let generating: boolean = false
 
-const textchange = () => {
+const textChange = () => {
     const height = textarea.scrollHeight
     textarea.style.height = `${height}px`
 }
@@ -427,7 +427,7 @@ const enter = (e: KeyboardEvent) => {
             <textarea
                 placeholder="Chat with Gemini.."
                 rows="1"
-                on:input={textchange}
+                on:input={textChange}
                 on:keypress={enter}
                 bind:this={textarea}
             ></textarea>

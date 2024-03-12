@@ -35,7 +35,7 @@ export default class Gemini {
         }
 
         const model = this.genAI.getGenerativeModel({ model: option.model })
-        const threshold = this.plugin.getSettings().saftyThreshold
+        const threshold = this.plugin.getSettings().safetyThreshold
 
         model.generationConfig = {
             stopSequences: option.config.stopSequences,
@@ -87,7 +87,7 @@ export class GeminiChat {
     private session
 
     constructor(plugin: GeminiAssistantPlugin, model: any) {
-        const threshold = plugin.getSettings().saftyThreshold
+        const threshold = plugin.getSettings().safetyThreshold
         this.model = model
         const safetySettings = [
             {

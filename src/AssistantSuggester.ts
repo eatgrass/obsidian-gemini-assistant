@@ -6,7 +6,7 @@ import SuggestionComponent from './components/SuggestionComponent.svelte'
 import { Scope, type GeminiPrompt } from 'Settings'
 import type Gemini from 'GeminiService'
 
-export default class AssistantSuggestor extends SuggestModal<GeminiPrompt> {
+export default class AssistantSuggester extends SuggestModal<GeminiPrompt> {
     private editor: Editor
 
     private query: any = ''
