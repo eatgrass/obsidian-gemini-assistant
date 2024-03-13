@@ -51,10 +51,10 @@ If your plugin does not need CSS, delete this file.
     position: absolute;
     left: 0;
     top: 3px;
-    animation: animloader 2s linear infinite;
+    animation: animation-loader 2s linear infinite;
 }
 
-@keyframes animloader {
+@keyframes animation-loader {
     0% {
         transform: scale(0);
         opacity: 1;
